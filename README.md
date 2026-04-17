@@ -1,6 +1,6 @@
 # Send a billing-failure email — interactive tutorial
 
-A Next.js app whose UI **is** the tutorial. It walks a developer from "no account" to "email sent" through five locked steps, each of which unlocks only once the previous is done. The final step is a real send form that fires [Resend](https://resend.com/)'s API against a React Email template.
+A Next.js app whose UI **is** the tutorial. It walks a developer from "no account" to "email sent" through five steps. You can navigate any step at any time — the sidebar is never locked. Each step has a **Mark complete** button you click manually when you're done. Once all five steps are marked complete, the Send button in Step 5 becomes active and you can fire a real email through [Resend](https://resend.com/)'s API.
 
 Use it by itself as a hands-on lesson, or read along with this README as the code-level companion.
 
@@ -251,7 +251,7 @@ export async function POST(req: Request) {
 | Delivered in Resend dashboard but never arrived | Check spam. If it's flagged, your DKIM/SPF setup isn't quite right — re-verify the domain. |
 | "No API key" error on send | Neither the UI field nor `RESEND_API_KEY` env var is set. Fill one in. |
 | Build fails on Render | Usually a Node version mismatch. Set `engines.node` in `package.json` or pin a Node version in Render's settings. |
-| Step I completed is now locked | You probably cleared localStorage. Hit **Reset progress** and re-walk — it's quick. |
+| Send button stays disabled | Steps 1–4 must each be manually marked complete. Click the **Mark complete** button at the bottom of each step. |
 
 ## References
 
