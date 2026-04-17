@@ -19,7 +19,7 @@ export function StepPreview({
 
   useEffect(() => {
     if (tab === "code" && source === null) {
-      fetch("/api/source")
+      fetch("/api/source?file=email-template")
         .then((r) => r.text())
         .then(setSource)
         .catch(() => setSource("// Could not load source."));
