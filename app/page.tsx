@@ -24,7 +24,7 @@ const initialState: WizardState = {
   currentStep: 0,
   completed: STEPS.map(() => false),
   apiKey: "",
-  fromEmail: "onboarding@resend.dev",
+  fromEmail: "",
   toEmail: "",
   customerName: "Alex",
 };

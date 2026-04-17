@@ -33,8 +33,7 @@ export function StepPreview({
       <p style={s.prose}>
         This is what the billing failure email looks like with realistic values
         plugged in. Switch to <strong>Code</strong> to see the React Email
-        source — the same view you get in React Email's dev server at{" "}
-        <code style={s.inlineCode}>localhost:3001</code>.
+        source.
       </p>
 
       <div style={localStyles.viewer}>
