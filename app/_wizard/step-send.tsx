@@ -90,13 +90,17 @@ export function StepSend({
       {alreadyCompleted && <CompletedBadge />}
 
       <p style={s.prose}>
-        When you click <strong>Send</strong>, the browser posts to{" "}
-        <code style={s.inlineCode}>POST /api/send-billing-failure</code> — a
-        Next.js App Router route that instantiates the Resend SDK and calls{" "}
-        <code style={s.inlineCode}>resend.emails.send()</code> with your React
-        Email template as the <code style={s.inlineCode}>react</code> prop.
-        Switch to <strong>Route code</strong> to read the exact file running in
-        this app.
+        This wizard is the tutorial. The prompt was: build an example of how to
+        send a billing failure email using React Email and Resend, write a
+        companion guide for going from zero to sending an email, and share it as
+        a GitHub repo. Instead of a static README, the tutorial became this
+        app — each step walks a user or support engineer through the real
+        implementation: an API key, a verified domain, a React Email template,
+        a live preview, and finally this send form. The email template is
+        written with React Email, the sending code runs in a Next.js App Router
+        route, and the full written guide lives in the repo's README. Clicking{" "}
+        <strong>Send the email</strong> below fires that route for real — switch
+        to <strong>Route code</strong> to read the exact file.
       </p>
 
       {/* tab bar */}
