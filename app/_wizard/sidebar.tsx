@@ -7,6 +7,7 @@ interface SidebarProps {
   currentStep: number;
   completed: boolean[];
   onSelect: (index: number) => void;
+  onHome: () => void;
   onReset: () => void;
 }
 
@@ -15,6 +16,7 @@ export function Sidebar({
   currentStep,
   completed,
   onSelect,
+  onHome,
   onReset,
 }: SidebarProps) {
   const completedCount = completed.filter(Boolean).length;
@@ -22,22 +24,11 @@ export function Sidebar({
 
   return (
     <aside style={styles.sidebar}>
-      <div style={styles.header}>
+      <button onClick={onHome} style={styles.headerBtn}>
         <div style={styles.eyebrow}>Tutorial</div>
         <h2 style={styles.title}>Send a billing-failure email</h2>
         <p style={styles.byline}>with Next.js, React Email, and Resend</p>
-        <p style={styles.intro}>
-          This wizard is the tutorial. The prompt was: build an example of how
-          to send a billing failure email using React Email and Resend, write a
-          companion guide for going from zero to sending an email, and share it
-          as a GitHub repo. Instead of a static README, the tutorial became this
-          app — each step walks a user or support engineer through the real
-          implementation: an API key, a verified domain, a React Email template,
-          a live preview, and finally the send form. The email template is
-          written with React Email, the sending code runs in a Next.js App
-          Router route, and the full written guide lives in the repo's README.
-        </p>
-      </div>
+      </button>
 
       <div style={styles.progress}>
         <div style={styles.progressHeader}>
@@ -101,10 +92,17 @@ const styles: Record<string, React.CSSProperties> = {
     position: "sticky",
     top: 32,
   },
-  header: {
-    paddingBottom: 20,
+  headerBtn: {
+    display: "block",
+    width: "100%",
+    textAlign: "left",
+    background: "transparent",
+    border: "none",
+    padding: "0 0 20px",
     borderBottom: "1px solid #e5e7eb",
     marginBottom: 20,
+    cursor: "pointer",
+    fontFamily: "inherit",
   },
   eyebrow: {
     fontSize: 11,
@@ -124,12 +122,6 @@ const styles: Record<string, React.CSSProperties> = {
   byline: {
     fontSize: 12,
     color: "#6b7280",
-    margin: "0 0 12px",
-  },
-  intro: {
-    fontSize: 12,
-    color: "#6b7280",
-    lineHeight: 1.6,
     margin: 0,
   },
   progress: {
