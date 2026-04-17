@@ -42,19 +42,14 @@ export function Sidebar({
         {steps.map((step, i) => {
           const isCompleted = completed[i];
           const isCurrent = i === currentStep;
-          // A step is unlocked if it's completed OR all previous are completed.
-          const prevDone = i === 0 || completed.slice(0, i).every(Boolean);
-          const unlocked = isCompleted || prevDone;
 
           return (
             <li key={step.id} style={styles.item}>
               <button
-                onClick={() => unlocked && onSelect(i)}
-                disabled={!unlocked}
+                onClick={() => onSelect(i)}
                 style={{
                   ...styles.itemButton,
                   ...(isCurrent ? styles.itemButtonCurrent : {}),
-                  ...(unlocked ? {} : styles.itemButtonLocked),
                 }}
               >
                 <span
@@ -64,7 +59,7 @@ export function Sidebar({
                     ...(isCurrent && !isCompleted ? styles.circleCurrent : {}),
                   }}
                 >
-                  {isCompleted ? "✓" : unlocked ? i + 1 : "🔒"}
+                  {isCompleted ? "✓" : i + 1}
                 </span>
                 <span style={styles.itemText}>
                   <span style={styles.itemTitle}>{step.title}</span>

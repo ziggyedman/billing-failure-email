@@ -8,6 +8,7 @@ interface StepSendProps {
   fromEmail: string;
   toEmail: string;
   customerName: string;
+  completed: boolean[];
   onToEmailChange: (v: string) => void;
   onCustomerNameChange: (v: string) => void;
   onComplete: () => void;
@@ -25,6 +26,7 @@ export function StepSend({
   fromEmail,
   toEmail,
   customerName,
+  completed,
   onToEmailChange,
   onCustomerNameChange,
   onComplete,
@@ -32,7 +34,9 @@ export function StepSend({
 }: StepSendProps) {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
 
+  const allPriorComplete = completed.slice(0, 4).every(Boolean);
   const canSend =
+    allPriorComplete &&
     /@.+\..+/.test(toEmail.trim()) &&
     !!fromEmail.trim() &&
     !!apiKey.trim() &&
@@ -142,6 +146,13 @@ await resend.emails.send({
           />
         </div>
       </div>
+
+      {!allPriorComplete && (
+        <div style={s.callout}>
+          <span style={s.calloutStrong}>Complete steps 1–4 first.</span> Mark
+          each step complete using its button, then come back here to send.
+        </div>
+      )}
 
       <div style={s.actionsRow}>
         <button

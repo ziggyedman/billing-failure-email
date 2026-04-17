@@ -72,12 +72,7 @@ export default function Home() {
   }
 
   function goTo(index: number) {
-    // Only allow navigation to completed steps or the next uncompleted one.
-    const maxAllowed = state.completed.findIndex((c) => !c);
-    const cap = maxAllowed === -1 ? STEPS.length - 1 : maxAllowed;
-    if (index <= cap) {
-      setState((s) => ({ ...s, currentStep: index }));
-    }
+    setState((s) => ({ ...s, currentStep: index }));
   }
 
   function reset() {
@@ -158,6 +153,7 @@ export default function Home() {
                 fromEmail={state.fromEmail}
                 toEmail={state.toEmail}
                 customerName={state.customerName}
+                completed={state.completed}
                 onToEmailChange={(v) => update("toEmail", v)}
                 onCustomerNameChange={(v) => update("customerName", v)}
                 onComplete={() => markComplete(4)}
