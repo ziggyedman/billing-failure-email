@@ -135,8 +135,16 @@ export default function Home() {
                   The email template is written as a React component using React
                   Email. The sending code runs in a Next.js App Router API
                   route. Every step shows the actual code from this repo — not
-                  simplified snippets. The full written guide lives in the
-                  repo's README.
+                  simplified snippets. The full written guide lives in the{" "}
+                  <a
+                    href="https://github.com/ziggyedman/billing-failure-email/blob/main/README.md"
+                    target="_blank"
+                    rel="noreferrer"
+                    style={styles.introLink}
+                  >
+                    repo's README
+                  </a>
+                  .
                 </p>
                 <p style={styles.introProse}>
                   Use the sidebar to navigate any step at any time. Mark each
@@ -267,6 +275,10 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.7,
     color: "#374151",
     margin: "0 0 16px",
+  },
+  introLink: {
+    color: "#2563eb",
+    textDecoration: "underline",
   },
   startBtn: {
     marginTop: 8,
