@@ -68,6 +68,13 @@ export function StepPreview({
             >
               Code
             </button>
+            <a
+              href="/api/source?file=email-template"
+              download="billing-failure.tsx"
+              style={localStyles.downloadBtn}
+            >
+              ↓ Download
+            </a>
           </div>
         </div>
 
@@ -164,6 +171,19 @@ const localStyles: Record<string, React.CSSProperties> = {
     background: "#ffffff",
     color: "#111827",
     boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+  },
+  downloadBtn: {
+    fontSize: 12,
+    fontWeight: 500,
+    color: "#374151",
+    textDecoration: "none",
+    border: "1px solid #d1d5db",
+    borderRadius: 5,
+    padding: "3px 10px",
+    marginLeft: 6,
+    background: "#ffffff",
+    display: "inline-flex",
+    alignItems: "center",
   },
   frame: {
     width: "100%",
