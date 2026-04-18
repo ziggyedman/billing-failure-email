@@ -151,6 +151,13 @@ export default function Home() {
                   one complete when you're done — once all five are checked, the
                   final send form unlocks.
                 </p>
+                <div style={styles.videoWrapper}>
+                  <iframe
+                    src="https://www.loom.com/embed/a1c760ab3f8a417bbcbac7f1f1f23382"
+                    allowFullScreen
+                    style={styles.videoIframe}
+                  />
+                </div>
                 <button
                   style={styles.startBtn}
                   onClick={() => goTo(0)}
@@ -279,6 +286,22 @@ const styles: Record<string, React.CSSProperties> = {
   introLink: {
     color: "#2563eb",
     textDecoration: "underline",
+  },
+  videoWrapper: {
+    position: "relative",
+    paddingBottom: "56.25%",
+    height: 0,
+    marginBottom: 20,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  videoIframe: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    border: 0,
   },
   startBtn: {
     marginTop: 8,
