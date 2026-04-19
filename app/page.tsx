@@ -124,18 +124,18 @@ export default function Home() {
               </header>
               <div style={styles.contentBody}>
                 <p style={styles.introProse}>
-                  An interactive guide to sending billing failure emails with
-                  React Email and Resend. Each step covers a concrete piece of
-                  the implementation — creating an account, verifying a sending
-                  domain, understanding the email template, previewing the
-                  rendered output, and firing a live send through a Next.js API
+                  This is an interactive guide to sending a billing failure email using Next.js,  
+                  React Email and Resend. Each step covers a piece of
+                  the implementation. From creating an account, verifying a sending
+                  domain, getting a glimpse of how the email template is built, previewing the
+                  rendered template, and sending the email through a Next.js API
                   route.
                 </p>
                 <p style={styles.introProse}>
                   The email template is written as a React component using React
                   Email. The sending code runs in a Next.js App Router API
-                  route. Every step shows the actual code from this repo — not
-                  simplified snippets. The full written guide lives in the{" "}
+                  route. Every step shows the actual code from the repo and a live preview of the email. You can interact with the code and preview at each step, and see how changes affect the final output in real time.
+                  The full written guide lives in the{" "}
                   <a
                     href="https://github.com/ziggyedman/billing-failure-email/blob/main/README.md"
                     target="_blank"
