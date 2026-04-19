@@ -38,25 +38,19 @@ export function StepDomain({
       </NumberedSection>
 
       <NumberedSection num={2} title="Note the DNS records Resend gives you">
-        Resend shows the records to add — typically an MX record for bounces, a
+        Resend shows the records to add. Typically an MX record for bounces, a
         TXT for SPF, and TXT or CNAME records for DKIM. Leave that tab open.
       </NumberedSection>
 
       <NumberedSection num={3} title="Add the records in your DNS provider">
         In Namecheap, Cloudflare, or wherever your domain lives, add each record
         exactly as shown. The <strong>Host</strong> field is just the subdomain
-        part — if Resend shows{" "}
-        <code style={s.inlineCode}>send.yourdomain.com</code>, type only{" "}
-        <code style={s.inlineCode}>send</code>, not the full domain.
+        part. 
       </NumberedSection>
 
       <NumberedSection num={4} title="Verify in Resend" last>
         Click <strong>Verify DNS Records</strong> in Resend. Propagation usually
-        takes a few minutes; some providers take up to an hour.{" "}
-        <a href="https://dnschecker.org" target="_blank" style={s.link}>
-          dnschecker.org
-        </a>{" "}
-        lets you confirm what's live.
+        takes a few minutes; some providers take up to an hour.
       </NumberedSection>
 
       <div style={{ marginTop: 24 }}>

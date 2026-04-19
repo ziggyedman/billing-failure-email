@@ -183,7 +183,7 @@ export function StepSend({
           <NumberedSection num={1} title="Receive and unpack the request">
             The browser sends your API key, from address, recipient, and
             customer name as a JSON body. The route reads each field and falls
-            back to environment variables if any are missing — so the app works
+            back to environment variables if any are missing. So the app works
             whether the user pastes their own key in Step 1 or the deployer
             pre-sets one on the server.
             <pre style={localStyles.code}>{`const body   = await request.json();
@@ -194,8 +194,8 @@ const to     = body.to?.trim();`}</pre>
           </NumberedSection>
 
           <NumberedSection num={2} title="Authenticate with the Resend SDK">
-            A Resend client is created using the resolved API key. This is what
-            authenticates the request — Resend verifies the key against your
+            A Resend client is created using the resolved API key. This
+            authenticates the request. Resend verifies the key against your
             account and allows sending from your verified domain. A new client
             is created per request so there's no shared state between calls.
             <pre style={localStyles.code}>{`import { Resend } from "resend";
@@ -233,8 +233,8 @@ const { data, error } = await resend.emails.send({
           <NumberedSection num={4} title="Handle the response">
             If the send succeeds, Resend returns a unique message ID. The route
             passes it back to the browser, where it's shown as a confirmation.
-            If anything goes wrong — wrong API key, unverified domain, invalid
-            recipient, rate limit — the error message from Resend is surfaced
+            If anything goes wrong. Wrong API key, unverified domain, invalid
+            recipient, rate limit. The error message from Resend is surfaced
             directly so you know exactly what to fix.
             <pre style={localStyles.code}>{`if (error) return Response.json({ error }, { status: 500 });
 return Response.json(data);
@@ -249,7 +249,7 @@ return Response.json(data);
             under Emails, searchable by message ID. The dashboard shows the
             delivery status (delivered, bounced, complained), the rendered HTML,
             and timestamps. In a production setup you'd also receive webhook
-            events for each status change so your system can react — for
+            events for each status change so your system can react. For
             example, pausing the subscription after a confirmed bounce.
           </NumberedSection>
         </>

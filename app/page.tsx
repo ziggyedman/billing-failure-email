@@ -124,7 +124,7 @@ export default function Home() {
               </header>
               <div style={styles.contentBody}>
                 <p style={styles.introProse}>
-                  This is an interactive companion tutorial to sending a billing failure email using Next.js, React Email and Resend. 
+                  This is an interactive companion tutorial on how to send a billing-failure email using Next.js, React Email and Resend. 
                   It's a full step-by-step tutorial that walks you through the entire process, from start to finish.
                   From creating a Resend account, verifying a sending domain, building the email template, and finally sending the email, every step is covered in detail with live code and previews.
                   
@@ -146,7 +146,7 @@ export default function Home() {
                 </p>
                 <p style={styles.introProse}>
                   Use the sidebar to navigate any step at any time. Mark each
-                  one complete when you're done — once all five are checked, the
+                  one complete when you're done. Once all steps are checked, the
                   final send form unlocks.
                 </p>
                 <div style={styles.videoWrapper}>
