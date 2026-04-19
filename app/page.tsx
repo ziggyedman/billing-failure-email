@@ -153,7 +153,7 @@ export default function Home() {
                 </p>
                 <div style={styles.videoWrapper}>
                   <iframe
-                    src="https://www.loom.com/embed/a1c760ab3f8a417bbcbac7f1f1f23382"
+                    src="https://www.loom.com/embed/af24b2bb3e904053bb6d2c5c56a35740"
                     allowFullScreen
                     style={styles.videoIframe}
                   />
