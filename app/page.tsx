@@ -123,11 +123,21 @@ export default function Home() {
                 </p>
               </header>
               <div style={styles.contentBody}>
+                <div style={styles.videoSection}>
+                  <div style={styles.watchBadge}>5 min overview</div>
+                  <div style={styles.videoWrapper}>
+                    <iframe
+                      src="https://www.loom.com/embed/af24b2bb3e904053bb6d2c5c56a35740"
+                      allowFullScreen
+                      style={styles.videoIframe}
+                    />
+                  </div>
+                </div>
+
                 <p style={styles.introProse}>
-                  This is an interactive companion tutorial on how to send a billing-failure email using Next.js, React Email and Resend. 
-                  It's a full step-by-step tutorial that walks you through the entire process, from start to finish.
+                  This is an interactive companion tutorial on how to send a billing-failure email using Next.js, React Email and Resend.
+                  It&apos;s a full step-by-step tutorial that walks you through the entire process, from start to finish.
                   From creating a Resend account, verifying a sending domain, building the email template, and finally sending the email, every step is covered in detail with live code and previews.
-                  
                 </p>
                 <p style={styles.introProse}>
                   The email template is written as a React component using React Email.
@@ -140,28 +150,61 @@ export default function Home() {
                     rel="noreferrer"
                     style={styles.introLink}
                   >
-                    repo's README
+                    repo&apos;s README
                   </a>
                   .
                 </p>
                 <p style={styles.introProse}>
                   Use the sidebar to navigate any step at any time. Mark each
-                  one complete when you're done. Once all steps are checked, the
+                  one complete when you&apos;re done. Once all steps are checked, the
                   final send form unlocks.
                 </p>
-                <div style={styles.videoWrapper}>
-                  <iframe
-                    src="https://www.loom.com/embed/af24b2bb3e904053bb6d2c5c56a35740"
-                    allowFullScreen
-                    style={styles.videoIframe}
-                  />
+
+                <div style={styles.whatYoullDo}>
+                  <p style={styles.whatTitle}>What you'll do in 4 steps</p>
+                  <ol style={styles.stepList}>
+                    <li style={styles.stepItem}>
+                      <span style={styles.stepNum}>1</span>
+                      <div>
+                        <strong style={styles.stepItemTitle}>Create a Resend account</strong>
+                        <span style={styles.stepItemDesc}> — sign up and generate an API key</span>
+                      </div>
+                    </li>
+                    <li style={styles.stepItem}>
+                      <span style={styles.stepNum}>2</span>
+                      <div>
+                        <strong style={styles.stepItemTitle}>Verify your sending domain</strong>
+                        <span style={styles.stepItemDesc}> — add DNS records so Resend can send from your domain</span>
+                      </div>
+                    </li>
+                    <li style={styles.stepItem}>
+                      <span style={styles.stepNum}>3</span>
+                      <div>
+                        <strong style={styles.stepItemTitle}>Build &amp; preview the email template</strong>
+                        <span style={styles.stepItemDesc}> — edit the React Email component and preview live</span>
+                      </div>
+                    </li>
+                    <li style={styles.stepItem}>
+                      <span style={styles.stepNum}>4</span>
+                      <div>
+                        <strong style={styles.stepItemTitle}>Send the email</strong>
+                        <span style={styles.stepItemDesc}> — fire a real send through a Next.js API route</span>
+                      </div>
+                    </li>
+                  </ol>
                 </div>
-                <button
-                  style={styles.startBtn}
-                  onClick={() => goTo(0)}
-                >
-                  Start with Step 1 →
-                </button>
+
+                <div style={styles.startRow}>
+                  <button
+                    style={styles.startBtn}
+                    onClick={() => goTo(0)}
+                  >
+                    Start with Step 1 →
+                  </button>
+                  <span style={styles.startNote}>
+                    Use the sidebar to jump to any step at any time
+                  </span>
+                </div>
               </div>
             </>
           ) : (
@@ -276,25 +319,30 @@ const styles: Record<string, React.CSSProperties> = {
     lineHeight: 1.6,
   },
   contentBody: {},
-  introProse: {
-    fontSize: 15,
-    lineHeight: 1.75,
-    color: "#3f3f46",
-    margin: "0 0 16px",
+  videoSection: {
+    marginBottom: 28,
   },
-  introLink: {
-    color: "#18181b",
-    textDecoration: "underline",
-    textUnderlineOffset: "3px",
+  watchBadge: {
+    display: "inline-block",
+    background: "#f4f4f5",
+    color: "#71717a",
+    border: "1px solid #e4e4e7",
+    borderRadius: 5,
+    padding: "3px 8px",
+    fontSize: 11,
+    fontWeight: 600,
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.5px",
+    marginBottom: 8,
   },
   videoWrapper: {
     position: "relative",
     paddingBottom: "56.25%",
     height: 0,
-    marginBottom: 24,
     borderRadius: 10,
     overflow: "hidden",
     border: "1px solid #e4e4e7",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
   },
   videoIframe: {
     position: "absolute",
@@ -304,8 +352,76 @@ const styles: Record<string, React.CSSProperties> = {
     height: "100%",
     border: 0,
   },
+  whatYoullDo: {
+    background: "#f4f4f5",
+    border: "1px solid #e4e4e7",
+    borderRadius: 10,
+    padding: "18px 20px",
+    marginBottom: 20,
+  },
+  whatTitle: {
+    fontSize: 11,
+    fontWeight: 700,
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.7px",
+    color: "#71717a",
+    margin: "0 0 12px",
+  },
+  stepList: {
+    margin: 0,
+    padding: 0,
+    listStyle: "none",
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 10,
+  },
+  stepItem: {
+    display: "flex",
+    alignItems: "flex-start",
+    gap: 10,
+    fontSize: 14,
+    lineHeight: 1.5,
+    color: "#3f3f46",
+  },
+  stepNum: {
+    flexShrink: 0,
+    width: 22,
+    height: 22,
+    background: "#18181b",
+    color: "#fff",
+    borderRadius: "50%",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 11,
+    fontWeight: 700,
+    marginTop: 1,
+  },
+  stepItemTitle: {
+    fontWeight: 600,
+    color: "#18181b",
+  },
+  stepItemDesc: {
+    color: "#71717a",
+  },
+  introProse: {
+    fontSize: 14,
+    lineHeight: 1.75,
+    color: "#71717a",
+    margin: "0 0 20px",
+  },
+  introLink: {
+    color: "#18181b",
+    textDecoration: "underline",
+    textUnderlineOffset: "3px",
+  },
+  startRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 14,
+    flexWrap: "wrap" as const,
+  },
   startBtn: {
-    marginTop: 8,
     background: "#18181b",
     color: "#ffffff",
     border: "none",
@@ -315,6 +431,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     cursor: "pointer",
     letterSpacing: "-0.1px",
+    flexShrink: 0,
+  },
+  startNote: {
+    fontSize: 12,
+    color: "#a1a1aa",
   },
   loadingMain: {
     height: "100vh",
