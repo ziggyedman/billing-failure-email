@@ -54,14 +54,6 @@ export function StepDomain({
         </li>
       </ol>
 
-      <div style={s.callout}>
-        <span style={s.calloutStrong}>On Namecheap specifically:</span>{" "}
-        Advanced DNS → Add New Record. Leave TTL on <strong>Automatic</strong>.
-        Namecheap auto-appends your domain to the Host field, so don't include
-        the full domain yourself — otherwise you get{" "}
-        <code style={s.inlineCode}>send.baard.cc.baard.cc</code>.
-      </div>
-
       <div style={{ marginTop: 24 }}>
         <label style={s.label} htmlFor="fromEmail">
           Your "from" address
