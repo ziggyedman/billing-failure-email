@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { stepStyles as s, CompletedBadge } from "./step-styles";
 
 interface StepTemplateProps {
@@ -11,7 +11,7 @@ interface StepTemplateProps {
 }
 
 type MainTab = "try" | "learn";
-type ViewerTab = "preview" | "code";
+type ViewerTab = "preview" | "code" | "template";
 
 interface EmailValues {
   customerName: string;
@@ -374,6 +374,14 @@ export function StepTemplate({
   const [copied, setCopied] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
 
+  // Template editor state
+  const [templateCode, setTemplateCode] = useState("");
+  const [templateLoading, setTemplateLoading] = useState(false);
+  const [templateApplying, setTemplateApplying] = useState(false);
+  const [customHtml, setCustomHtml] = useState<string | null>(null);
+  const [renderError, setRenderError] = useState<string | null>(null);
+  const templateFetched = useRef(false);
+
   function set(key: keyof EmailValues, val: string) {
     setValues((v) => ({ ...v, [key]: val }));
   }
@@ -381,6 +389,30 @@ export function StepTemplate({
   function applyPreview() {
     setPreviewUrl(buildPreviewUrl(values));
     onCustomerNameChange(values.customerName);
+    setCustomHtml(null); // reset any custom-rendered preview
+  }
+
+  async function applyTemplate() {
+    setTemplateApplying(true);
+    setRenderError(null);
+    try {
+      const res = await fetch("/api/render-custom", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: templateCode }),
+      });
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        setRenderError(json.error ?? "Render failed.");
+      } else {
+        setCustomHtml(json.html);
+        setViewerTab("preview");
+      }
+    } catch (e) {
+      setRenderError((e as Error).message);
+    } finally {
+      setTemplateApplying(false);
+    }
   }
 
   function copy(name: string, snippet: string) {
@@ -390,7 +422,15 @@ export function StepTemplate({
   }
 
   useEffect(() => {
-    if (viewerTab === "preview") setPreviewUrl(buildPreviewUrl(values));
+    if (viewerTab === "preview" && !customHtml) setPreviewUrl(buildPreviewUrl(values));
+    if (viewerTab === "template" && !templateFetched.current) {
+      templateFetched.current = true;
+      setTemplateLoading(true);
+      fetch("/api/source?file=email-template")
+        .then((r) => r.text())
+        .then((src) => { setTemplateCode(src); setTemplateLoading(false); })
+        .catch(() => setTemplateLoading(false));
+    }
   }, [viewerTab]);
 
   return (
@@ -454,8 +494,10 @@ export function StepTemplate({
                 <span style={localStyles.dot} />
                 <span style={localStyles.viewerTitle}>
                   {viewerTab === "preview"
-                    ? "Your payment didn't go through"
-                    : "emails/billing-failure.tsx"}
+                    ? customHtml ? "Preview — custom template" : "Your payment didn't go through"
+                    : viewerTab === "template"
+                    ? "emails/billing-failure.tsx — edit & render"
+                    : "resend.emails.send(…)"}
                 </span>
               </div>
               <div style={localStyles.viewerTabs}>
@@ -466,13 +508,19 @@ export function StepTemplate({
                   Code
                 </button>
                 <button
+                  style={{ ...localStyles.viewerTab, ...(viewerTab === "template" ? localStyles.viewerTabActive : {}) }}
+                  onClick={() => setViewerTab("template")}
+                >
+                  Template
+                </button>
+                <button
                   style={{
                     ...localStyles.viewerTab,
                     ...(viewerTab === "preview" ? localStyles.viewerTabActive : localStyles.viewerTabGlow),
                   }}
                   onClick={() => setViewerTab("preview")}
                 >
-                  Preview
+                  {customHtml ? "Preview ●" : "Preview"}
                 </button>
                 <a
                   href="/api/source?file=email-template"
@@ -485,22 +533,47 @@ export function StepTemplate({
             </div>
 
             {viewerTab === "preview" && (
-              <iframe
-                key={previewUrl}
-                src={previewUrl}
-                style={localStyles.frame}
-                title="Email preview"
-              />
+              customHtml
+                ? <iframe srcDoc={customHtml} style={localStyles.frame} title="Email preview (custom)" />
+                : <iframe key={previewUrl} src={previewUrl} style={localStyles.frame} title="Email preview" />
             )}
             {viewerTab === "code" && (
               <pre style={localStyles.code}>{buildCodeSnippet(values)}</pre>
             )}
+            {viewerTab === "template" && (
+              <div style={{ position: "relative" as const }}>
+                {templateLoading ? (
+                  <div style={localStyles.templateLoading}>Loading template…</div>
+                ) : (
+                  <textarea
+                    style={localStyles.templateTextarea}
+                    value={templateCode}
+                    onChange={(e) => setTemplateCode(e.target.value)}
+                    spellCheck={false}
+                    autoComplete="off"
+                    autoCorrect="off"
+                  />
+                )}
+                <div style={localStyles.templateBar}>
+                  {renderError && (
+                    <span style={localStyles.templateError}>{renderError}</span>
+                  )}
+                  <button
+                    style={templateApplying ? localStyles.templateApplyBtnDisabled : localStyles.templateApplyBtn}
+                    onClick={applyTemplate}
+                    disabled={templateApplying || templateLoading}
+                  >
+                    {templateApplying ? "Rendering…" : "Render preview →"}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           <p style={s.hint}>
-            The preview is server-rendered using React Email's{" "}
-            <code>render()</code> — exactly what Resend delivers to the inbox.
-            Run <code>npm run email</code> locally for hot-reload.
+            <strong>Code</strong> — the Resend send call with your values. &nbsp;
+            <strong>Template</strong> — edit <code>billing-failure.tsx</code> directly, paste snippets from the component library below, then click <strong>Render preview →</strong> to see changes. &nbsp;
+            <strong>Preview</strong> — the rendered email, exactly what Resend delivers to the inbox.
           </p>
 
           {/* ── Component library ── */}
@@ -563,7 +636,7 @@ export function StepTemplate({
         <>
           <p style={s.prose}>
             React Email provides a set of components that abstract away the quirks of
-            email HTML — tables for layout, inline styles everywhere, absolute image
+            email HTML. Tables for layout, inline styles everywhere, absolute image
             URLs. Each component below is available in{" "}
             <code style={s.inlineCode}>@react-email/components</code>. Here's what
             each one does, why it exists, and when to reach for it.
@@ -799,6 +872,75 @@ const localStyles: Record<string, React.CSSProperties> = {
     whiteSpace: "pre" as const,
     overflowX: "auto" as const,
     display: "block",
+  },
+  // Template editor
+  templateTextarea: {
+    width: "100%",
+    height: 560,
+    padding: "16px 20px",
+    margin: 0,
+    background: "#18181b",
+    color: "#e4e4e7",
+    fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
+    fontSize: 12,
+    lineHeight: 1.65,
+    border: "none",
+    outline: "none",
+    resize: "none" as const,
+    boxSizing: "border-box" as const,
+    display: "block",
+    tabSize: 2,
+  },
+  templateLoading: {
+    height: 560,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontSize: 13,
+    color: "#71717a",
+    background: "#18181b",
+  },
+  templateBar: {
+    padding: "10px 14px",
+    background: "#27272a",
+    borderTop: "1px solid #3f3f46",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-end",
+    gap: 12,
+    flexWrap: "wrap" as const,
+  },
+  templateError: {
+    flex: 1,
+    fontSize: 11.5,
+    color: "#f87171",
+    fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
+    lineHeight: 1.5,
+    wordBreak: "break-word" as const,
+  },
+  templateApplyBtn: {
+    fontSize: 12,
+    fontWeight: 600,
+    padding: "6px 14px",
+    background: "#6366f1",
+    color: "#ffffff",
+    border: "none",
+    borderRadius: 6,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    flexShrink: 0,
+  },
+  templateApplyBtnDisabled: {
+    fontSize: 12,
+    fontWeight: 600,
+    padding: "6px 14px",
+    background: "#3f3f46",
+    color: "#71717a",
+    border: "none",
+    borderRadius: 6,
+    cursor: "not-allowed",
+    fontFamily: "inherit",
+    flexShrink: 0,
   },
   // Component library (Try it tab)
   componentLibraryHeader: {
