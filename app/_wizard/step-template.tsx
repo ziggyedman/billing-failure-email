@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { stepStyles as s, CompletedBadge, NumberedSection } from "./step-styles";
+import { stepStyles as s, CompletedBadge } from "./step-styles";
 
 interface StepTemplateProps {
   customerName: string;
@@ -30,6 +30,277 @@ const DEFAULTS: EmailValues = {
   nextRetryDate: "in 3 days",
   companyName:   "Acme, Inc.",
 };
+
+interface ComponentEntry {
+  name: string;
+  tag: string;
+  badge: string;
+  description: string;
+  when: string;
+  snippet: string;
+}
+
+const COMPONENTS: ComponentEntry[] = [
+  {
+    name: "Html",
+    tag: "<Html>",
+    badge: "root",
+    description: "The outermost wrapper for every React Email template. Sets the lang and dir attributes and outputs the <!DOCTYPE html> declaration.",
+    when: "Always — every template must have exactly one Html as the root.",
+    snippet: `import { Html } from "@react-email/components";
+
+<Html lang="en" dir="ltr">
+  {/* Head, Preview, Body all go here */}
+</Html>`,
+  },
+  {
+    name: "Head",
+    tag: "<Head>",
+    badge: "metadata",
+    description: "Holds email metadata, @font-face declarations, and @media query style blocks. Renders as <head> in the final HTML.",
+    when: "When you need custom fonts (via <Font>) or mobile-responsive @media overrides. Most email styling is inline — Head is for the exceptions.",
+    snippet: `import { Head } from "@react-email/components";
+
+<Head>
+  <style>{\`
+    @media (max-width: 600px) {
+      .mobile-text { font-size: 14px !important; }
+    }
+  \`}</style>
+</Head>`,
+  },
+  {
+    name: "Preview",
+    tag: "<Preview>",
+    badge: "inbox",
+    description: "Hidden text that email clients display as the inbox snippet — the line visible before opening a message. Never appears in the email body itself.",
+    when: "Always include it. It's one of the most impactful conversion levers in email. Keep it under 90 characters or it gets cut off.",
+    snippet: `import { Preview } from "@react-email/components";
+
+<Preview>
+  We couldn't process your $29.00 payment.
+  Update your card to keep Pro active.
+</Preview>`,
+  },
+  {
+    name: "Body",
+    tag: "<Body>",
+    badge: "layout",
+    description: "Sets the background color and base font for the entire email. Equivalent to the <body> tag — wraps everything the recipient sees.",
+    when: "Always — place it directly inside Html, wrapping Container.",
+    snippet: `import { Body } from "@react-email/components";
+
+<Body style={{
+  backgroundColor: "#f4f4f5",
+  fontFamily: "'Inter', Arial, sans-serif",
+  margin: 0,
+  padding: 0,
+}}>
+  {/* Container goes here */}
+</Body>`,
+  },
+  {
+    name: "Container",
+    tag: "<Container>",
+    badge: "layout",
+    description: "Centers content and caps its width. The primary layout wrapper inside Body. Renders as a centered table for Outlook compatibility.",
+    when: "Always — set maxWidth between 560–600px. Wider emails don't render well in preview panes and mobile clients.",
+    snippet: `import { Container } from "@react-email/components";
+
+<Container style={{
+  maxWidth: 600,
+  margin: "0 auto",
+  backgroundColor: "#ffffff",
+  borderRadius: 8,
+}}>
+  {/* Sections go here */}
+</Container>`,
+  },
+  {
+    name: "Section",
+    tag: "<Section>",
+    badge: "layout",
+    description: "A block-level container. Renders as a <table> row internally to ensure Outlook compatibility. Use it anywhere you'd use a <div> on the web.",
+    when: "For any distinct region: header, alert banner, content area, footer, colored band, or padding zone.",
+    snippet: `import { Section } from "@react-email/components";
+
+// Alert banner example
+<Section style={{
+  padding: "16px 24px",
+  backgroundColor: "#fef2f2",
+  borderLeft: "4px solid #ef4444",
+}}>
+  <Text>⚠ Payment failed</Text>
+</Section>`,
+  },
+  {
+    name: "Row / Column",
+    tag: "<Row> + <Column>",
+    badge: "layout",
+    description: "Multi-column layouts. Row is the grid container; Column is each cell. Renders as table-based layout for cross-client compatibility including Outlook.",
+    when: "Two-column layouts: content + sidebar, logo + nav, icon + text. Use percentage widths on Column — they're the most reliable unit across email clients.",
+    snippet: `import { Row, Column } from "@react-email/components";
+
+<Row>
+  <Column style={{ width: "60%", paddingRight: 16 }}>
+    <Text>Main content on the left</Text>
+  </Column>
+  <Column style={{ width: "40%" }}>
+    <Text>Sidebar on the right</Text>
+  </Column>
+</Row>`,
+  },
+  {
+    name: "Heading",
+    tag: "<Heading>",
+    badge: "text",
+    description: "Renders h1–h6 headings. Use it over a styled <Text> when the content is semantically a heading — it outputs the correct HTML element, which matters for accessibility.",
+    when: "Email titles, section headers, and any text that functions as a heading. The as prop accepts 'h1' through 'h6'.",
+    snippet: `import { Heading } from "@react-email/components";
+
+<Heading
+  as="h2"
+  style={{
+    fontSize: 22,
+    fontWeight: 700,
+    color: "#18181b",
+    margin: "0 0 12px",
+    letterSpacing: "-0.3px",
+  }}
+>
+  Hi {customerName}, action required
+</Heading>`,
+  },
+  {
+    name: "Text",
+    tag: "<Text>",
+    badge: "text",
+    description: "Paragraph text. Renders as a <p> tag with safe default resets that prevent email clients from adding unexpected margins.",
+    when: "Every prose block — body copy, labels, detail rows, footers. The most-used component. Avoid raw <p> tags; use Text instead.",
+    snippet: `import { Text } from "@react-email/components";
+
+<Text style={{
+  fontSize: 14,
+  color: "#3f3f46",
+  lineHeight: "1.75",
+  margin: "0 0 16px",
+}}>
+  Hi {customerName}, we tried to charge ••••{cardLast4}
+  but the payment didn't go through.
+</Text>`,
+  },
+  {
+    name: "Button",
+    tag: "<Button>",
+    badge: "action",
+    description: "A CTA rendered as an anchor tag styled to look like a button. Email clients don't reliably support HTML <button> — Button outputs an <a> that works everywhere.",
+    when: "Primary calls to action: 'Update payment method', 'View invoice', 'Reactivate subscription'. Always provide an href — the button is meaningless without a destination.",
+    snippet: `import { Button } from "@react-email/components";
+
+<Button
+  href={updatePaymentUrl}
+  style={{
+    backgroundColor: "#18181b",
+    color: "#ffffff",
+    padding: "12px 28px",
+    borderRadius: 6,
+    fontSize: 14,
+    fontWeight: 600,
+    display: "block",
+    textAlign: "center",
+  }}
+>
+  Update payment method
+</Button>`,
+  },
+  {
+    name: "Link",
+    tag: "<Link>",
+    badge: "action",
+    description: "A plain hyperlink. Renders as an <a> tag. Use inside Text for inline links; use Button for standalone CTA links.",
+    when: "Inline links within a paragraph — 'Contact support', 'View your invoice', 'Unsubscribe'. Button handles full-width click targets better.",
+    snippet: `import { Link } from "@react-email/components";
+
+<Text>
+  Questions?{" "}
+  <Link href={supportUrl} style={{ color: "#18181b" }}>
+    Contact our support team
+  </Link>{" "}
+  and we'll help you out.
+</Text>`,
+  },
+  {
+    name: "Img",
+    tag: "<Img>",
+    badge: "media",
+    description: "Email-safe image tag. src must be an absolute https:// URL — email clients cannot load relative paths. Always set width and height to prevent layout shift.",
+    when: "Logos, product screenshots, hero banners. Add alt text for clients that block images by default (common in corporate environments).",
+    snippet: `import { Img } from "@react-email/components";
+
+// Replace the text logo in Section with a real image
+<Img
+  src="https://yourdomain.com/logo.png"
+  alt="Acme"
+  width={120}
+  height={40}
+  style={{ display: "block" }}
+/>`,
+  },
+  {
+    name: "Hr",
+    tag: "<Hr>",
+    badge: "layout",
+    description: "A horizontal divider line. Renders a <hr> element with safe cross-client styles. Visually separates content sections.",
+    when: "Between content sections, between detail rows in a table-style layout, and before the footer. Already used in the payment details box in this template.",
+    snippet: `import { Hr } from "@react-email/components";
+
+<Hr style={{
+  borderColor: "#e4e4e7",
+  borderWidth: 1,
+  margin: "20px 0",
+}} />`,
+  },
+  {
+    name: "Font",
+    tag: "<Font>",
+    badge: "style",
+    description: "Loads a web font via @font-face for clients that support it (Apple Mail, iOS Mail, Outlook on Mac). Falls back to fallbackFontFamily silently on Gmail and webmail.",
+    when: "When brand typography matters and you have a hosted woff2 file. Include Font inside Head.",
+    snippet: `import { Font } from "@react-email/components";
+
+<Head>
+  <Font
+    fontFamily="Inter"
+    fallbackFontFamily="Arial"
+    webFont={{
+      url: "https://fonts.gstatic.com/s/inter/v13/UcCO3FwrK3iLTeHuS_fvQtMwCp50KnMw2boKoduKmMEVuLyfAZ9hiJ-Ek-_EeA.woff2",
+      format: "woff2",
+    }}
+    fontWeight={400}
+    fontStyle="normal"
+  />
+</Head>`,
+  },
+  {
+    name: "Markdown",
+    tag: "<Markdown>",
+    badge: "content",
+    description: "Converts a markdown string to email-safe HTML at render time. Useful when email body content is stored as markdown in a database or CMS.",
+    when: "Dynamic or user-authored content that lives outside code. Stick to headings, bold, italic, and links — not all markdown features are supported in email.",
+    snippet: `import { Markdown } from "@react-email/components";
+
+// Content from your CMS or database
+const body = \`
+## Payment failed
+
+Hi **{customerName}**, we couldn't charge your card.
+
+Please [update your payment method](https://example.com/billing).
+\`;
+
+<Markdown>{body}</Markdown>`,
+  },
+];
 
 function buildPreviewUrl(values: EmailValues): string {
   const p = new URLSearchParams({
@@ -78,6 +349,18 @@ const FIELDS: { key: keyof EmailValues; label: string; wide?: boolean }[] = [
   { key: "companyName",   label: "Company name" },
 ];
 
+const BADGE_COLORS: Record<string, { bg: string; color: string }> = {
+  root:     { bg: "#fef3c7", color: "#92400e" },
+  metadata: { bg: "#ede9fe", color: "#5b21b6" },
+  inbox:    { bg: "#dbeafe", color: "#1d4ed8" },
+  layout:   { bg: "#f0fdf4", color: "#166534" },
+  text:     { bg: "#f4f4f5", color: "#3f3f46" },
+  action:   { bg: "#fff1f2", color: "#9f1239" },
+  media:    { bg: "#fdf4ff", color: "#7e22ce" },
+  style:    { bg: "#fff7ed", color: "#9a3412" },
+  content:  { bg: "#f0f9ff", color: "#075985" },
+};
+
 export function StepTemplate({
   customerName,
   onCustomerNameChange,
@@ -88,6 +371,8 @@ export function StepTemplate({
   const [viewerTab, setViewerTab] = useState<ViewerTab>("code");
   const [values, setValues] = useState<EmailValues>({ ...DEFAULTS, customerName });
   const [previewUrl, setPreviewUrl] = useState(() => buildPreviewUrl({ ...DEFAULTS, customerName }));
+  const [copied, setCopied] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   function set(key: keyof EmailValues, val: string) {
     setValues((v) => ({ ...v, [key]: val }));
@@ -96,6 +381,12 @@ export function StepTemplate({
   function applyPreview() {
     setPreviewUrl(buildPreviewUrl(values));
     onCustomerNameChange(values.customerName);
+  }
+
+  function copy(name: string, snippet: string) {
+    navigator.clipboard.writeText(snippet).catch(() => {});
+    setCopied(name);
+    setTimeout(() => setCopied(null), 2000);
   }
 
   useEffect(() => {
@@ -211,6 +502,59 @@ export function StepTemplate({
             <code>render()</code> — exactly what Resend delivers to the inbox.
             Run <code>npm run email</code> locally for hot-reload.
           </p>
+
+          {/* ── Component library ── */}
+          <div style={localStyles.componentLibraryHeader}>
+            <div>
+              <div style={localStyles.componentLibraryTitle}>React Email component library</div>
+              <div style={localStyles.componentLibrarySubtitle}>
+                Every component available to build or extend your template. Download the template and add these to customize it fully.
+              </div>
+            </div>
+          </div>
+
+          <div style={localStyles.componentGrid}>
+            {COMPONENTS.map((c) => {
+              const isExpanded = expanded === c.name;
+              const isCopied = copied === c.name;
+              const badgeStyle = BADGE_COLORS[c.badge] ?? BADGE_COLORS.text;
+              return (
+                <div key={c.name} style={localStyles.componentCard}>
+                  <div style={localStyles.componentCardHeader}>
+                    <div style={localStyles.componentCardLeft}>
+                      <code style={localStyles.componentTag}>{c.tag}</code>
+                      <span style={{ ...localStyles.componentBadge, background: badgeStyle.bg, color: badgeStyle.color }}>
+                        {c.badge}
+                      </span>
+                    </div>
+                    <div style={localStyles.componentCardActions}>
+                      <button
+                        style={localStyles.componentExpandBtn}
+                        onClick={() => setExpanded(isExpanded ? null : c.name)}
+                      >
+                        {isExpanded ? "Hide ↑" : "See snippet ↓"}
+                      </button>
+                      <button
+                        style={{ ...localStyles.componentCopyBtn, ...(isCopied ? localStyles.componentCopyBtnDone : {}) }}
+                        onClick={() => copy(c.name, c.snippet)}
+                      >
+                        {isCopied ? "Copied!" : "Copy"}
+                      </button>
+                    </div>
+                  </div>
+                  <p style={localStyles.componentDesc}>{c.description}</p>
+                  {isExpanded && (
+                    <>
+                      <p style={localStyles.componentWhen}>
+                        <strong>When to use:</strong> {c.when}
+                      </p>
+                      <pre style={localStyles.componentSnippet}>{c.snippet}</pre>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </>
       )}
 
@@ -218,86 +562,43 @@ export function StepTemplate({
       {mainTab === "learn" && (
         <>
           <p style={s.prose}>
-            The template lives at{" "}
-            <code style={s.inlineCode}>emails/billing-failure.tsx</code> — a
-            single React component. Every value that changes per customer is a
-            prop. Here's what each section of the email does:
+            React Email provides a set of components that abstract away the quirks of
+            email HTML — tables for layout, inline styles everywhere, absolute image
+            URLs. Each component below is available in{" "}
+            <code style={s.inlineCode}>@react-email/components</code>. Here's what
+            each one does, why it exists, and when to reach for it.
           </p>
 
-          <NumberedSection num={1} title="Preview text">
-            <code style={s.inlineCode}>&lt;Preview&gt;</code> renders{" "}
-            <em>hidden</em> text that email clients show as the inbox snippet —
-            the line you see before opening a message. It's built from the
-            amount and product name so the customer knows what happened without
-            opening the email.
-            <pre style={localStyles.mini}>{`<Preview>
-  We couldn't process your payment of {currency} {amount}.
-  Update your card to keep {productName} active.
-</Preview>`}</pre>
-          </NumberedSection>
-
-          <NumberedSection num={2} title="Logo / product name">
-            A <code style={s.inlineCode}>&lt;Section&gt;</code> at the top
-            displays the product name as bold text. In a real deployment you'd
-            swap this for an <code style={s.inlineCode}>&lt;Img&gt;</code> tag
-            pointing to a hosted logo file.
-          </NumberedSection>
-
-          <NumberedSection num={3} title="Alert banner">
-            A red-tinted <code style={s.inlineCode}>&lt;Section&gt;</code> with
-            a warning icon and "Payment failed" text. It uses inline background
-            and border colors because email clients ignore external stylesheets
-            — every style in the template is an inline object for this reason.
-          </NumberedSection>
-
-          <NumberedSection num={4} title="Greeting & opening paragraph">
-            A <code style={s.inlineCode}>&lt;Heading&gt;</code> addresses the
-            customer by name, followed by a{" "}
-            <code style={s.inlineCode}>&lt;Text&gt;</code> paragraph that states
-            which card was charged and which plan it was for. Both pull directly
-            from props so every email is personalised.
-          </NumberedSection>
-
-          <NumberedSection num={5} title="Payment details box">
-            A grey-background <code style={s.inlineCode}>&lt;Section&gt;</code>{" "}
-            shows four rows — Amount, Card, Reason, Next retry — separated by{" "}
-            <code style={s.inlineCode}>&lt;Hr&gt;</code> dividers. Each row
-            uses flexbox to push the label left and the value right.
-            <pre style={localStyles.mini}>{`<Section style={detailsBox}>
-  <Text>Amount    · {currency} {amount}</Text>
-  <Hr />
-  <Text>Card      · •••• {cardLast4}</Text>
-  <Hr />
-  <Text>Reason    · {failureReason}</Text>
-  <Hr />
-  <Text>Next retry · {nextRetryDate}</Text>
-</Section>`}</pre>
-          </NumberedSection>
-
-          <NumberedSection num={6} title="CTA button">
-            <code style={s.inlineCode}>&lt;Button href=&#123;updatePaymentUrl&#125;&gt;</code>{" "}
-            is the primary action. React Email's{" "}
-            <code style={s.inlineCode}>&lt;Button&gt;</code> outputs an anchor
-            tag styled as a button — not an HTML{" "}
-            <code style={s.inlineCode}>&lt;button&gt;</code>, which many email
-            clients don't support. The URL is a prop so each customer can be
-            sent to the right billing page.
-          </NumberedSection>
-
-          <NumberedSection num={7} title="Urgency paragraph">
-            A short warning that if the retry also fails, the subscription will
-            be paused. Placed after the button deliberately — it reinforces
-            urgency without blocking the CTA.
-          </NumberedSection>
-
-          <NumberedSection num={8} title="Support link & footer" last>
-            An <code style={s.inlineCode}>&lt;Hr&gt;</code> divider separates
-            the main content from a support line using{" "}
-            <code style={s.inlineCode}>&lt;Link&gt;</code>. Below that, a
-            footer <code style={s.inlineCode}>&lt;Text&gt;</code> shows the
-            company name and a one-line reason for receiving the email —
-            required by anti-spam best practices.
-          </NumberedSection>
+          {COMPONENTS.map((c, i) => {
+            const isCopied = copied === `learn-${c.name}`;
+            const badgeStyle = BADGE_COLORS[c.badge] ?? BADGE_COLORS.text;
+            return (
+              <div
+                key={c.name}
+                style={{ ...localStyles.learnCard, ...(i === COMPONENTS.length - 1 ? { marginBottom: 0 } : {}) }}
+              >
+                <div style={localStyles.learnCardHeader}>
+                  <div style={localStyles.learnCardLeft}>
+                    <code style={localStyles.learnTag}>{c.tag}</code>
+                    <span style={{ ...localStyles.componentBadge, background: badgeStyle.bg, color: badgeStyle.color }}>
+                      {c.badge}
+                    </span>
+                  </div>
+                  <button
+                    style={{ ...localStyles.componentCopyBtn, ...(isCopied ? localStyles.componentCopyBtnDone : {}) }}
+                    onClick={() => copy(`learn-${c.name}`, c.snippet)}
+                  >
+                    {isCopied ? "Copied!" : "Copy snippet"}
+                  </button>
+                </div>
+                <p style={localStyles.learnDesc}>{c.description}</p>
+                <p style={localStyles.componentWhen}>
+                  <strong>When to use:</strong> {c.when}
+                </p>
+                <pre style={localStyles.mini}>{c.snippet}</pre>
+              </div>
+            );
+          })}
         </>
       )}
 
@@ -452,7 +753,6 @@ const localStyles: Record<string, React.CSSProperties> = {
     color: "#6366f1",
     boxShadow: "0 0 0 1px rgba(99,102,241,0.3), 0 0 8px rgba(99,102,241,0.2)",
     borderRadius: 5,
-    animation: "none",
   },
   downloadBtn: {
     fontSize: 12,
@@ -491,12 +791,167 @@ const localStyles: Record<string, React.CSSProperties> = {
     color: "#e4e4e7",
     fontSize: 12,
     lineHeight: 1.55,
-    padding: "10px 14px",
+    padding: "12px 16px",
     borderRadius: 6,
     marginTop: 10,
     marginBottom: 0,
     fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
     whiteSpace: "pre" as const,
     overflowX: "auto" as const,
+    display: "block",
+  },
+  // Component library (Try it tab)
+  componentLibraryHeader: {
+    display: "flex",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginTop: 28,
+    marginBottom: 12,
+    paddingTop: 24,
+    borderTop: "1px solid #e4e4e7",
+  },
+  componentLibraryTitle: {
+    fontSize: 13,
+    fontWeight: 600,
+    color: "#18181b",
+    marginBottom: 4,
+  },
+  componentLibrarySubtitle: {
+    fontSize: 12,
+    color: "#71717a",
+    lineHeight: 1.5,
+  },
+  componentGrid: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 8,
+  },
+  componentCard: {
+    border: "1px solid #e4e4e7",
+    borderRadius: 8,
+    padding: "12px 14px",
+    background: "#fafafa",
+  },
+  componentCardHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  componentCardLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+  },
+  componentCardActions: {
+    display: "flex",
+    gap: 6,
+    alignItems: "center",
+  },
+  componentTag: {
+    fontSize: 12.5,
+    fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
+    color: "#18181b",
+    background: "#f4f4f5",
+    border: "1px solid #e4e4e7",
+    borderRadius: 4,
+    padding: "1px 6px",
+    fontWeight: 600,
+  },
+  componentBadge: {
+    fontSize: 10,
+    fontWeight: 600,
+    padding: "2px 7px",
+    borderRadius: 99,
+    letterSpacing: "0.2px",
+    textTransform: "uppercase" as const,
+  },
+  componentDesc: {
+    fontSize: 12.5,
+    color: "#52525b",
+    lineHeight: 1.65,
+    margin: 0,
+  },
+  componentWhen: {
+    fontSize: 12,
+    color: "#71717a",
+    lineHeight: 1.6,
+    margin: "8px 0 0",
+  },
+  componentExpandBtn: {
+    fontSize: 11,
+    fontWeight: 500,
+    color: "#71717a",
+    background: "transparent",
+    border: "1px solid #e4e4e7",
+    borderRadius: 5,
+    padding: "3px 9px",
+    cursor: "pointer",
+    fontFamily: "inherit",
+  },
+  componentCopyBtn: {
+    fontSize: 11,
+    fontWeight: 500,
+    color: "#3f3f46",
+    background: "#ffffff",
+    border: "1px solid #e4e4e7",
+    borderRadius: 5,
+    padding: "3px 9px",
+    cursor: "pointer",
+    fontFamily: "inherit",
+  },
+  componentCopyBtnDone: {
+    color: "#16a34a",
+    borderColor: "#bbf7d0",
+    background: "#f0fdf4",
+  },
+  componentSnippet: {
+    background: "#18181b",
+    color: "#e4e4e7",
+    fontSize: 11.5,
+    lineHeight: 1.6,
+    padding: "12px 14px",
+    borderRadius: 6,
+    marginTop: 10,
+    marginBottom: 0,
+    fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
+    whiteSpace: "pre" as const,
+    overflowX: "auto" as const,
+    display: "block",
+  },
+  // How it's built tab
+  learnCard: {
+    border: "1px solid #e4e4e7",
+    borderRadius: 8,
+    padding: "16px 18px",
+    marginBottom: 12,
+    background: "#ffffff",
+  },
+  learnCardHeader: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  learnCardLeft: {
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+  },
+  learnTag: {
+    fontSize: 13,
+    fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
+    color: "#18181b",
+    background: "#f4f4f5",
+    border: "1px solid #e4e4e7",
+    borderRadius: 5,
+    padding: "2px 8px",
+    fontWeight: 600,
+  },
+  learnDesc: {
+    fontSize: 13,
+    color: "#3f3f46",
+    lineHeight: 1.7,
+    margin: "0 0 0",
   },
 };
