@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { STEPS } from "./_wizard/steps";
 import { StepAccount } from "./_wizard/step-account";
 import { StepDomain } from "./_wizard/step-domain";
-import { StepTemplate } from "./_wizard/step-template";
+import { StepTemplate, ComponentLibraryPanel } from "./_wizard/step-template";
 import { StepSend } from "./_wizard/step-send";
 import { Sidebar } from "./_wizard/sidebar";
 
@@ -17,6 +17,9 @@ interface WizardState {
   fromEmail: string;
   toEmail: string;
   customerName: string;
+  notes: string[];
+  customTemplateCode: string;
+  customTemplateHtml: string;
 }
 
 const initialState: WizardState = {
@@ -26,6 +29,9 @@ const initialState: WizardState = {
   fromEmail: "",
   toEmail: "",
   customerName: "Alex",
+  notes: STEPS.map(() => ""),
+  customTemplateCode: "",
+  customTemplateHtml: "",
 };
 
 export default function Home() {
@@ -41,7 +47,13 @@ export default function Home() {
           Array.isArray(parsed.completed) &&
           parsed.completed.length === STEPS.length
         ) {
-          setState(parsed);
+          setState({
+            ...initialState,
+            ...parsed,
+            notes: Array.isArray(parsed.notes) && parsed.notes.length === STEPS.length
+              ? parsed.notes
+              : initialState.notes,
+          });
         }
       }
     } catch {
@@ -110,7 +122,7 @@ export default function Home() {
         />
 
         <div style={styles.content}>
-          <div style={styles.contentInner}>
+          <div style={{ ...styles.contentInner, ...(isHome ? {} : { maxWidth: 1400, padding: "48px 40px 64px" }) }}>
           {isHome ? (
             <>
               <header style={styles.contentHeader}>
@@ -124,7 +136,7 @@ export default function Home() {
               </header>
               <div style={styles.contentBody}>
                 <div style={styles.videoSection}>
-                  <div style={styles.watchBadge}>5 min overview</div>
+                  <div style={styles.watchBadge}>2 min overview</div>
                   <div style={styles.videoWrapper}>
                     <iframe
                       src="https://www.loom.com/embed/af24b2bb3e904053bb6d2c5c56a35740"
@@ -220,43 +232,71 @@ export default function Home() {
                 </p>
               </header>
 
-              <div style={styles.contentBody}>
-                {current === 0 && (
-                  <StepAccount
-                    apiKey={state.apiKey}
-                    onApiKeyChange={(v) => update("apiKey", v)}
-                    onComplete={() => markComplete(0)}
-                    alreadyCompleted={state.completed[0]}
-                  />
-                )}
-                {current === 1 && (
-                  <StepDomain
-                    fromEmail={state.fromEmail}
-                    onFromEmailChange={(v) => update("fromEmail", v)}
-                    onComplete={() => markComplete(1)}
-                    alreadyCompleted={state.completed[1]}
-                  />
-                )}
-                {current === 2 && (
-                  <StepTemplate
-                    customerName={state.customerName}
-                    onCustomerNameChange={(v) => update("customerName", v)}
-                    onComplete={() => markComplete(2)}
-                    alreadyCompleted={state.completed[2]}
-                  />
-                )}
-                {current === 3 && (
-                  <StepSend
-                    apiKey={state.apiKey}
-                    fromEmail={state.fromEmail}
-                    toEmail={state.toEmail}
-                    customerName={state.customerName}
-                    completed={state.completed}
-                    onToEmailChange={(v) => update("toEmail", v)}
-                    onComplete={() => markComplete(3)}
-                    alreadyCompleted={state.completed[3]}
-                  />
-                )}
+              <div style={styles.stepColumns}>
+                <div style={styles.stepMain}>
+                  {current === 0 && (
+                    <StepAccount
+                      apiKey={state.apiKey}
+                      onApiKeyChange={(v) => update("apiKey", v)}
+                      onComplete={() => markComplete(0)}
+                      alreadyCompleted={state.completed[0]}
+                    />
+                  )}
+                  {current === 1 && (
+                    <StepDomain
+                      fromEmail={state.fromEmail}
+                      onFromEmailChange={(v) => update("fromEmail", v)}
+                      onComplete={() => markComplete(1)}
+                      alreadyCompleted={state.completed[1]}
+                    />
+                  )}
+                  {current === 2 && (
+                    <StepTemplate
+                      customerName={state.customerName}
+                      onComplete={() => markComplete(2)}
+                      alreadyCompleted={state.completed[2]}
+                      customTemplateCode={state.customTemplateCode}
+                      onCustomTemplateCodeChange={(v) => update("customTemplateCode", v)}
+                      onCustomHtmlChange={(html) => update("customTemplateHtml", html ?? "")}
+                    />
+                  )}
+                  {current === 3 && (
+                    <StepSend
+                      apiKey={state.apiKey}
+                      fromEmail={state.fromEmail}
+                      toEmail={state.toEmail}
+                      customerName={state.customerName}
+                      customTemplateHtml={state.customTemplateHtml}
+                      completed={state.completed}
+                      onToEmailChange={(v) => update("toEmail", v)}
+                      onCustomerNameChange={(v) => update("customerName", v)}
+                      onComplete={() => markComplete(3)}
+                      alreadyCompleted={state.completed[3]}
+                    />
+                  )}
+                </div>
+
+                <div style={styles.stepPanel}>
+                  {current === 2 ? (
+                    <ComponentLibraryPanel />
+                  ) : (
+                    <div style={styles.notesPanel}>
+                      <label style={styles.notesPanelLabel}>Notes</label>
+                      <textarea
+                        style={styles.notesTextarea}
+                        value={state.notes[current] ?? ""}
+                        onChange={(e) => {
+                          const next = [...state.notes];
+                          next[current] = e.target.value;
+                          update("notes", next);
+                        }}
+                        placeholder="Jot anything down as you work through this step…"
+                        spellCheck={false}
+                      />
+                      <p style={styles.notesHint}>Auto-saved. Persists across refreshes.</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </>
           )}
@@ -450,5 +490,64 @@ const styles: Record<string, React.CSSProperties> = {
     background: "#18181b",
     borderRadius: "50%",
     opacity: 0.3,
+  },
+  stepColumns: {
+    display: "flex",
+    gap: 32,
+    alignItems: "flex-start",
+  },
+  stepMain: {
+    flex: 1,
+    minWidth: 0,
+  },
+  stepPanel: {
+    width: 420,
+    flexShrink: 0,
+    position: "sticky" as const,
+    top: 0,
+    maxHeight: "calc(100vh - 96px)",
+    overflowY: "auto" as const,
+  },
+  notesPanel: {
+    border: "1px solid #e4e4e7",
+    borderRadius: 8,
+    overflow: "hidden",
+    background: "#fafafa",
+    display: "flex",
+    flexDirection: "column" as const,
+  },
+  notesPanelLabel: {
+    display: "block",
+    fontSize: 11,
+    fontWeight: 600,
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.6px",
+    color: "#71717a",
+    padding: "10px 14px 8px",
+    borderBottom: "1px solid #e4e4e7",
+    background: "#f4f4f5",
+  },
+  notesTextarea: {
+    flex: 1,
+    width: "100%",
+    minHeight: 280,
+    padding: "12px 14px",
+    fontSize: 13,
+    lineHeight: 1.7,
+    color: "#3f3f46",
+    background: "#ffffff",
+    border: "none",
+    outline: "none",
+    resize: "vertical" as const,
+    fontFamily: "inherit",
+    boxSizing: "border-box" as const,
+  },
+  notesHint: {
+    fontSize: 11,
+    color: "#a1a1aa",
+    padding: "6px 14px 10px",
+    margin: 0,
+    borderTop: "1px solid #e4e4e7",
+    background: "#fafafa",
   },
 };

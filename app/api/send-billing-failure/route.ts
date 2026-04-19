@@ -11,6 +11,7 @@ interface SendBody {
   amount?: string;
   currency?: string;
   cardLast4?: string;
+  customHtml?: string;
 }
 
 export async function POST(request: Request) {
@@ -45,25 +46,30 @@ export async function POST(request: Request) {
     }
 
     const resend = new Resend(apiKey);
+    const customHtml = body.customHtml?.trim();
 
-    const { data, error } = await resend.emails.send({
-      from,
-      to: [to],
-      subject: "Your payment didn't go through",
-      react: BillingFailureEmail({
-        customerName: body.customerName || "there",
-        productName: "Acme",
-        planName: "Pro",
-        amount: body.amount || "29.00",
-        currency: body.currency || "USD",
-        cardLast4: body.cardLast4 || "4242",
-        failureReason: "Your card was declined (insufficient_funds).",
-        nextRetryDate: "in 3 days",
-        updatePaymentUrl: "https://example.com/billing",
-        supportUrl: "https://example.com/support",
-        companyName: "Acme, Inc.",
-      }),
-    });
+    const { data, error } = await resend.emails.send(
+      customHtml
+        ? { from, to: [to], subject: "Your payment didn't go through", html: customHtml }
+        : {
+            from,
+            to: [to],
+            subject: "Your payment didn't go through",
+            react: BillingFailureEmail({
+              customerName: body.customerName || "there",
+              productName: "Acme",
+              planName: "Pro",
+              amount: body.amount || "29.00",
+              currency: body.currency || "USD",
+              cardLast4: body.cardLast4 || "4242",
+              failureReason: "Your card was declined (insufficient_funds).",
+              nextRetryDate: "in 3 days",
+              updatePaymentUrl: "https://example.com/billing",
+              supportUrl: "https://example.com/support",
+              companyName: "Acme, Inc.",
+            }),
+          }
+    );
 
     if (error) {
       return Response.json({ error }, { status: 500 });

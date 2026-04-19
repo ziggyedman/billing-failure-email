@@ -2,15 +2,70 @@
 
 import { useEffect, useState } from "react";
 import { stepStyles as s, CompletedBadge, NumberedSection } from "./step-styles";
-import { FileCodeBlock } from "./code-block";
+import { CodeBlock, FileCodeBlock } from "./code-block";
+
+interface EmailValues {
+  customerName: string;
+  amount: string;
+  cardLast4: string;
+  failureReason: string;
+  nextRetryDate: string;
+  companyName: string;
+}
+
+const DEFAULTS: EmailValues = {
+  customerName:  "Alex",
+  amount:        "29.00",
+  cardLast4:     "4242",
+  failureReason: "Your card was declined (insufficient_funds).",
+  nextRetryDate: "in 3 days",
+  companyName:   "Acme, Inc.",
+};
+
+const FIELDS: { key: keyof EmailValues; label: string; wide?: boolean }[] = [
+  { key: "customerName",  label: "Customer name" },
+  { key: "amount",        label: "Amount" },
+  { key: "cardLast4",     label: "Card last 4" },
+  { key: "failureReason", label: "Failure reason", wide: true },
+  { key: "nextRetryDate", label: "Next retry" },
+  { key: "companyName",   label: "Company name" },
+];
+
+function buildCodeSnippet(v: EmailValues, from: string): string {
+  return `import { Resend } from "resend";
+import BillingFailureEmail from "@/emails/billing-failure";
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+await resend.emails.send({
+  from: "${from || "billing@yourdomain.com"}",
+  to: ["customer@example.com"],
+  subject: "Your payment didn't go through",
+  react: BillingFailureEmail({
+    customerName:     "${v.customerName}",
+    productName:      "Acme",
+    planName:         "Pro",
+    amount:           "${v.amount}",
+    currency:         "USD",
+    cardLast4:        "${v.cardLast4}",
+    failureReason:    "${v.failureReason}",
+    nextRetryDate:    "${v.nextRetryDate}",
+    companyName:      "${v.companyName}",
+    updatePaymentUrl: "https://example.com/billing",
+    supportUrl:       "https://example.com/support",
+  }),
+});`;
+}
 
 interface StepSendProps {
   apiKey: string;
   fromEmail: string;
   toEmail: string;
   customerName: string;
+  customTemplateHtml: string;
   completed: boolean[];
   onToEmailChange: (v: string) => void;
+  onCustomerNameChange: (v: string) => void;
   onComplete: () => void;
   alreadyCompleted: boolean;
 }
@@ -28,14 +83,25 @@ export function StepSend({
   fromEmail,
   toEmail,
   customerName,
+  customTemplateHtml,
   completed,
   onToEmailChange,
+  onCustomerNameChange,
   onComplete,
   alreadyCompleted,
 }: StepSendProps) {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [mainTab, setMainTab] = useState<MainTab>("send");
   const [sourceLines, setSourceLines] = useState<string[]>([]);
+  const [values, setValues] = useState<EmailValues>({ ...DEFAULTS, customerName });
+
+  function setField(key: keyof EmailValues, val: string) {
+    setValues((v) => ({ ...v, [key]: val }));
+  }
+
+  function applyValues() {
+    onCustomerNameChange(values.customerName);
+  }
 
   useEffect(() => {
     fetch("/api/source?file=send-route")
@@ -62,7 +128,15 @@ export function StepSend({
       const res = await fetch("/api/send-billing-failure", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey, from: fromEmail, to: toEmail, customerName }),
+        body: JSON.stringify({
+          apiKey,
+          from: fromEmail,
+          to: toEmail,
+          customerName: values.customerName,
+          amount: values.amount,
+          cardLast4: values.cardLast4,
+          ...(customTemplateHtml ? { customHtml: customTemplateHtml } : {}),
+        }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -102,6 +176,45 @@ export function StepSend({
       {/* ══════════════ SEND ══════════════ */}
       {mainTab === "send" && (
         <>
+          {/* ── Customer details + code snippet ── */}
+          <p style={s.prose}>
+            Edit the customer details and click <strong>Apply</strong> to update the send call below.
+            These values are injected into the email when no custom template is active.
+          </p>
+
+          <div style={localStyles.fieldGrid}>
+            {FIELDS.map(({ key, label, wide }) => (
+              <div key={key} style={{ ...localStyles.field, ...(wide ? localStyles.fieldWide : {}) }}>
+                <label style={localStyles.fieldLabel}>{label}</label>
+                <input
+                  style={localStyles.fieldInput}
+                  value={values[key]}
+                  onChange={(e) => setField(key, e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && applyValues()}
+                  spellCheck={false}
+                />
+              </div>
+            ))}
+            <div style={localStyles.applyRow}>
+              <button style={localStyles.applyBtn} onClick={applyValues}>Apply →</button>
+              <span style={localStyles.applyHint}>or press Enter in any field</span>
+            </div>
+          </div>
+
+          <div style={localStyles.codeViewer}>
+            <div style={localStyles.codeViewerBar}>
+              <div style={localStyles.codeViewerDots}>
+                <span style={localStyles.dot} />
+                <span style={localStyles.dot} />
+                <span style={localStyles.dot} />
+                <span style={localStyles.codeViewerTitle}>resend.emails.send(…)</span>
+              </div>
+            </div>
+            <CodeBlock code={buildCodeSnippet(values, fromEmail)} />
+          </div>
+
+          <div style={localStyles.sendDivider} />
+
           <p style={s.prose}>
             Enter a recipient address and click <strong>Send the email</strong>.
             The app will use your API key from Step 1 to authenticate with
@@ -140,6 +253,13 @@ export function StepSend({
               </p>
             </div>
           </div>
+
+          {customTemplateHtml && (
+            <div style={{ ...s.callout, background: "rgba(98,93,245,0.06)", borderColor: "rgba(98,93,245,0.3)" }}>
+              <span style={{ color: "#625DF5", fontWeight: 600 }}>Custom template active</span>{" "}
+              — the edited template from Step 3 will be sent.
+            </div>
+          )}
 
           {!allPriorComplete && (
             <div style={s.callout}>
@@ -250,6 +370,101 @@ export function StepSend({
 }
 
 const localStyles: Record<string, React.CSSProperties> = {
+  fieldGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr 1fr",
+    gap: "10px 14px",
+    background: "#f4f4f5",
+    border: "1px solid #e4e4e7",
+    borderRadius: 8,
+    padding: "16px 18px",
+    marginBottom: 14,
+  },
+  field: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 4,
+  },
+  fieldWide: {
+    gridColumn: "span 2",
+  },
+  fieldLabel: {
+    fontSize: 11,
+    fontWeight: 500,
+    color: "#71717a",
+    letterSpacing: "0.1px",
+  },
+  fieldInput: {
+    fontSize: 13,
+    padding: "5px 8px",
+    border: "1px solid #e4e4e7",
+    borderRadius: 5,
+    fontFamily: "inherit",
+    background: "#ffffff",
+    color: "#18181b",
+    width: "100%",
+    boxSizing: "border-box" as const,
+    outline: "none",
+  },
+  applyRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    gridColumn: "span 3",
+    paddingTop: 4,
+  },
+  applyBtn: {
+    fontSize: 13,
+    fontWeight: 600,
+    padding: "6px 16px",
+    background: "#18181b",
+    color: "#ffffff",
+    border: "none",
+    borderRadius: 6,
+    cursor: "pointer",
+    fontFamily: "inherit",
+  },
+  applyHint: {
+    fontSize: 12,
+    color: "#a1a1aa",
+  },
+  codeViewer: {
+    border: "1px solid #e4e4e7",
+    borderRadius: 8,
+    overflow: "hidden",
+    marginBottom: 24,
+    background: "#fafafa",
+  },
+  codeViewerBar: {
+    background: "#f4f4f5",
+    borderBottom: "1px solid #e4e4e7",
+    padding: "0 12px",
+    display: "flex",
+    alignItems: "center",
+    minHeight: 40,
+  },
+  codeViewerDots: {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+  },
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: "50%",
+    background: "#d4d4d8",
+    flexShrink: 0,
+  },
+  codeViewerTitle: {
+    marginLeft: 10,
+    fontSize: 12,
+    color: "#71717a",
+    fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
+  },
+  sendDivider: {
+    borderTop: "1px solid #e4e4e7",
+    marginBottom: 24,
+  },
   mainTabBar: {
     display: "flex",
     gap: 2,

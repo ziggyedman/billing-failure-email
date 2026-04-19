@@ -1,6 +1,6 @@
 # Send a billing-failure email — interactive tutorial
 
-An interactive guide to sending billing failure emails with React Email and Resend. Each step covers a concrete piece of the implementation — creating an account, verifying a sending domain, building and previewing the email template, and firing a real send through a Next.js API route.
+An interactive guide to sending billing-failure emails with React Email and Resend. Each step covers a concrete piece of the implementation — creating an account, verifying a sending domain, building and previewing the email template, and firing a real send through a Next.js API route.
 
 The wizard is the tutorial. Instead of a static guide, every step shows real code from this repo and lets you run it. The email template is written with React Email, the sending code runs in a Next.js App Router route, and this README is the written companion that goes deeper on each step.
 
@@ -10,26 +10,27 @@ The wizard is the tutorial. Instead of a static guide, every step shows real cod
 |---|---|---|
 | 1 | **Create a Resend account** | Sign up, generate an API key, paste it into the app |
 | 2 | **Verify your sending domain** | Add DNS records so Resend can send from your domain |
-| 3 | **Email template & live preview** | Edit values, modify template source, preview the rendered email, explore the React Email component library |
-| 4 | **Send the email** | Enter a recipient address, inspect the route code, hit send |
+| 3 | **Email template & live preview** | Edit the template source, add React Email components from the library, render and preview the result |
+| 4 | **Send the email** | Edit customer details, inspect the send call, enter a recipient, hit send |
 
 You can navigate any step at any time — the sidebar is never locked. Each step has a **Mark complete** button you click manually. Once all four are marked, the Send button in Step 4 activates.
 
-State (API key, progress, inputs) is persisted in `localStorage`, so refreshing keeps everything intact. Use **Reset progress** in the sidebar to start fresh.
+State (API key, progress, inputs, template edits) is persisted in `localStorage`, so refreshing keeps everything intact. Use **Reset progress** in the sidebar to start fresh.
 
 ## What's in the repo
 
 ```
 ├── app/
-│   ├── page.tsx                      ← wizard shell + intro view
+│   ├── page.tsx                      ← wizard shell + intro view (two-column layout)
 │   ├── layout.tsx
 │   ├── _wizard/
 │   │   ├── steps.ts                  ← step metadata
 │   │   ├── sidebar.tsx               ← progress sidebar
 │   │   ├── step-account.tsx          ← Step 1
 │   │   ├── step-domain.tsx           ← Step 2
-│   │   ├── step-template.tsx         ← Step 3 (editor + preview + component library)
-│   │   ├── step-send.tsx             ← Step 4 (send form + route walkthrough)
+│   │   ├── step-template.tsx         ← Step 3 (template editor + preview + component library panel)
+│   │   ├── step-send.tsx             ← Step 4 (customer details + send form + route walkthrough)
+│   │   ├── code-block.tsx            ← CodeBlock + FileCodeBlock shared components
 │   │   └── step-styles.tsx           ← shared styles + CompletedBadge
 │   └── api/
 │       ├── preview/route.ts          ← renders email to HTML via query params
@@ -106,25 +107,20 @@ Once verified, enter your sending address in the Step 2 field (e.g. `billing@you
 
 ### Step 3 — Email template & live preview
 
-Step 3 has two top-level tabs: **Try it** and **How it's built**.
+Step 3 has two top-level tabs: **Try it** and **How it's built**. The right panel shows the full React Email component library.
 
 #### Try it
 
-The **Try it** tab has three things:
+The **Try it** tab has two viewer tabs:
 
-**1. Value fields** — edit the customer-specific values (name, amount, card last 4, failure reason, next retry, company name) and click **Apply** to re-render.
+- **Template** — the `emails/billing-failure.tsx` source in an editable textarea. Make changes directly, or copy a snippet from the component library in the right panel and paste it in. Click **Render preview →** to compile and preview your edits live. Click **Reset to original** to discard all changes. Only `react` and `@react-email/components` imports are supported in the sandbox.
+- **Preview template** — the rendered email in an iframe. Shows the standard default preview, or your custom-rendered version once you've clicked **Render preview →**.
 
-**2. Viewer** — a code browser with three tabs:
-
-- **Code** — the `resend.emails.send()` call with your current values filled in. Useful reference for Step 4.
-- **Template** — the actual `emails/billing-failure.tsx` source in an editable textarea. Paste snippets from the component library below, make structural changes, then click **Render preview →** to compile and preview your edits live. Only `react` and `@react-email/components` imports are supported in the sandbox.
-- **Preview** — the rendered email in an iframe. Shows the standard preview (reflecting the value fields) or your custom-rendered template if you've applied edits from the Template tab. Glows to signal it's there.
-
-**3. React Email component library** — all 14 React Email components (`Html`, `Head`, `Preview`, `Body`, `Container`, `Section`, `Row/Column`, `Heading`, `Text`, `Button`, `Link`, `Img`, `Hr`, `Font`, `Markdown`) listed as cards. Each card shows a description, a "when to use" note, and a copyable code snippet. Copy a snippet → paste it into the Template tab → Render preview to see the change.
+Any template edits you render here are stored globally and carried into Step 4's send — your custom version is what gets delivered.
 
 #### How it's built
 
-The **How it's built** tab is a full component reference for `@react-email/components`. Every component gets its own card: what it does, when to reach for it, and a realistic code snippet you can copy directly.
+The **How it's built** tab is a full component reference for `@react-email/components`. Every component gets its own card: what it does, when to reach for it, a paste hint showing where in the template it goes, and a copyable code snippet.
 
 **The template** lives at `emails/billing-failure.tsx`:
 
@@ -149,8 +145,6 @@ export default BillingFailureEmail;
 
 **Every style is an inline object.** Email clients strip external stylesheets. React Email's components emit table-based HTML for Outlook compatibility — you write modern JSX and the library handles cross-client normalization.
 
-**Everything that varies per recipient is a prop.** The component is a pure function — same component renders the iframe preview and the email payload Resend delivers.
-
 **The live preview** (`/api/preview`) calls `render()` with your values as query params:
 
 ```ts
@@ -171,25 +165,32 @@ const { code: js } = await esbuild.transform(userCode, { loader: "tsx", format: 
 
 Step 4 has two tabs: **Send** and **How it's built**.
 
-**Send** — enter a recipient address and click **Send the email**. Active only once Steps 1–3 are each marked complete. The From address is read-only (set in Step 2).
+#### Send
 
-**How it's built** — a five-section walkthrough of `app/api/send-billing-failure/route.ts`:
+At the top: edit the **customer details** (name, amount, card last 4, failure reason, next retry, company name) and click **Apply**. These values update the `resend.emails.send()` code snippet shown below them, and are injected into the email when no custom template is active. If you rendered a custom template in Step 3, that version is sent instead — the customer values won't override it.
+
+Below: enter a **recipient address** and click **Send the email**. The send button is active once Steps 1–3 are each marked complete.
+
+If a custom template is active, a purple **Custom template active** callout confirms it will be used for the send.
+
+#### How it's built
+
+A five-section walkthrough of `app/api/send-billing-failure/route.ts`:
 
 1. Receive and unpack the JSON body, fall back to env vars
 2. Instantiate `new Resend(apiKey)`
-3. Call `resend.emails.send()` with `react: BillingFailureEmail({...})` — Resend renders the component to HTML internally
+3. Call `resend.emails.send()` — with `html:` (custom template) or `react: BillingFailureEmail({...})` (default)
 4. Return `data.id` on success, surface `error.message` on failure
-5. Track the send in the Resend dashboard at [resend.com/emails](https://resend.com/emails)
+5. Track the send in the Resend dashboard
 
 ```ts
 // app/api/send-billing-failure/route.ts
 const resend = new Resend(apiKey);
-const { data, error } = await resend.emails.send({
-  from,
-  to: [to],
-  subject: "Your payment didn't go through",
-  react: BillingFailureEmail({ customerName, amount, cardLast4, ... }),
-});
+const { data, error } = await resend.emails.send(
+  customHtml
+    ? { from, to: [to], subject: "Your payment didn't go through", html: customHtml }
+    : { from, to: [to], subject: "Your payment didn't go through", react: BillingFailureEmail({...}) }
+);
 if (error) return Response.json({ error }, { status: 500 });
 return Response.json(data); // { id: "msg_xxxx" }
 ```
@@ -241,14 +242,14 @@ export async function POST(req: Request) {
       to: invoice.customer_email!,
       subject: "Your payment didn't go through",
       react: BillingFailureEmail({
-        customerName:    invoice.customer_name ?? "there",
-        amount:          (invoice.amount_due / 100).toFixed(2),
-        currency:        invoice.currency.toUpperCase(),
-        cardLast4:       invoice.last_finalization_error?.payment_method?.card?.last4,
-        failureReason:   invoice.last_finalization_error?.message ?? "Card declined",
-        nextRetryDate:   new Date(invoice.next_payment_attempt! * 1000).toLocaleDateString(),
+        customerName:     invoice.customer_name ?? "there",
+        amount:           (invoice.amount_due / 100).toFixed(2),
+        currency:         invoice.currency.toUpperCase(),
+        cardLast4:        invoice.last_finalization_error?.payment_method?.card?.last4,
+        failureReason:    invoice.last_finalization_error?.message ?? "Card declined",
+        nextRetryDate:    new Date(invoice.next_payment_attempt! * 1000).toLocaleDateString(),
         updatePaymentUrl: `https://yourapp.com/billing/update?invoice=${invoice.id}`,
-        supportUrl:      "https://yourapp.com/support",
+        supportUrl:       "https://yourapp.com/support",
       }),
     });
   }
@@ -261,7 +262,7 @@ export async function POST(req: Request) {
 
 | Symptom | Fix |
 |---|---|
-| `from` address rejected | Domain not verified in Resend, or uses a domain you haven't added. Check [resend.com/domains](https://resend.com/domains). |
+| `from` address rejected | Domain not verified in Resend. Check [resend.com/domains](https://resend.com/domains). |
 | Delivered in dashboard but never arrived | Check spam. DKIM/SPF likely misconfigured — re-verify the domain. |
 | "No API key" error on send | Neither the Step 1 field nor `RESEND_API_KEY` env var is set. |
 | Send button stays disabled | Steps 1–3 must each be manually marked complete. |

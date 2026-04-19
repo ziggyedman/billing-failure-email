@@ -6,13 +6,15 @@ import { CodeBlock } from "./code-block";
 
 interface StepTemplateProps {
   customerName: string;
-  onCustomerNameChange: (v: string) => void;
   onComplete: () => void;
   alreadyCompleted: boolean;
+  customTemplateCode: string;
+  onCustomTemplateCodeChange: (code: string) => void;
+  onCustomHtmlChange: (html: string | null) => void;
 }
 
 type MainTab = "try" | "learn";
-type ViewerTab = "preview" | "code" | "template";
+type ViewerTab = "preview" | "template";
 
 interface EmailValues {
   customerName: string;
@@ -408,40 +410,6 @@ function buildPreviewUrl(values: EmailValues): string {
   return `/api/preview?${p.toString()}`;
 }
 
-function buildCodeSnippet(values: EmailValues): string {
-  return `import { Resend } from "resend";
-import BillingFailureEmail from "@/emails/billing-failure";
-
-const resend = new Resend(process.env.RESEND_API_KEY);
-
-await resend.emails.send({
-  from: "billing@yourdomain.com",
-  to: ["customer@example.com"],
-  subject: "Your payment didn't go through",
-  react: BillingFailureEmail({
-    customerName:     "${values.customerName}",
-    productName:      "Acme",
-    planName:         "Pro",
-    amount:           "${values.amount}",
-    currency:         "USD",
-    cardLast4:        "${values.cardLast4}",
-    failureReason:    "${values.failureReason}",
-    nextRetryDate:    "${values.nextRetryDate}",
-    companyName:      "${values.companyName}",
-    updatePaymentUrl: "https://example.com/billing",
-    supportUrl:       "https://example.com/support",
-  }),
-});`;
-}
-
-const FIELDS: { key: keyof EmailValues; label: string; wide?: boolean }[] = [
-  { key: "customerName",  label: "Customer name" },
-  { key: "amount",        label: "Amount" },
-  { key: "cardLast4",     label: "Card last 4" },
-  { key: "failureReason", label: "Failure reason", wide: true },
-  { key: "nextRetryDate", label: "Next retry" },
-  { key: "companyName",   label: "Company name" },
-];
 
 const BADGE_COLORS: Record<string, { bg: string; color: string }> = {
   root:     { bg: "#fef3c7", color: "#92400e" },
@@ -455,26 +423,92 @@ const BADGE_COLORS: Record<string, { bg: string; color: string }> = {
   content:  { bg: "#f0f9ff", color: "#075985" },
 };
 
+export function ComponentLibraryPanel() {
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  function copy(name: string, snippet: string) {
+    navigator.clipboard.writeText(snippet).catch(() => {});
+    setCopied(name);
+    setTimeout(() => setCopied(null), 2000);
+  }
+
+  return (
+    <div>
+      <div style={localStyles.componentPanelHeader}>
+        <div style={localStyles.componentLibraryTitle}>React Email components</div>
+        <div style={localStyles.componentLibrarySubtitle}>
+          Copy snippet → paste into Template tab → Render preview
+        </div>
+      </div>
+      <div style={localStyles.componentGrid}>
+        {COMPONENTS.map((c) => {
+          const isExpanded = expanded === c.name;
+          const isCopied = copied === c.name;
+          const badgeStyle = BADGE_COLORS[c.badge] ?? BADGE_COLORS.text;
+          return (
+            <div key={c.name} style={localStyles.componentCard}>
+              <div style={localStyles.componentCardHeader}>
+                <div style={localStyles.componentCardLeft}>
+                  <code style={localStyles.componentTag}>{c.tag}</code>
+                  <span style={{ ...localStyles.componentBadge, background: badgeStyle.bg, color: badgeStyle.color }}>
+                    {c.badge}
+                  </span>
+                  {c.needsImport
+                    ? <span style={localStyles.importBadgeNew}>+ import</span>
+                    : <span style={localStyles.importBadgeOk}>✓ imported</span>}
+                </div>
+                <div style={localStyles.componentCardActions}>
+                  <button style={localStyles.componentExpandBtn} onClick={() => setExpanded(isExpanded ? null : c.name)}>
+                    {isExpanded ? "Hide ↑" : "Snippet ↓"}
+                  </button>
+                  <button
+                    style={{ ...localStyles.componentCopyBtn, ...(isCopied ? localStyles.componentCopyBtnDone : {}) }}
+                    onClick={() => copy(c.name, c.snippet)}
+                  >
+                    {isCopied ? "Copied!" : "Copy"}
+                  </button>
+                </div>
+              </div>
+              <p style={localStyles.componentDesc}>{c.description}</p>
+              <p style={localStyles.pasteHintText}>
+                <span style={localStyles.pasteHintLabel}>↳</span> {c.pasteHint}
+              </p>
+              {isExpanded && (
+                <>
+                  <p style={localStyles.componentWhen}><strong>When to use:</strong> {c.when}</p>
+                  <CodeBlock code={c.snippet} compact />
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export function StepTemplate({
   customerName,
-  onCustomerNameChange,
   onComplete,
   alreadyCompleted,
+  customTemplateCode,
+  onCustomTemplateCodeChange,
+  onCustomHtmlChange,
 }: StepTemplateProps) {
   const [mainTab, setMainTab] = useState<MainTab>("try");
-  const [viewerTab, setViewerTab] = useState<ViewerTab>("code");
-  const [values, setValues] = useState<EmailValues>({ ...DEFAULTS, customerName });
-  const [previewUrl, setPreviewUrl] = useState(() => buildPreviewUrl({ ...DEFAULTS, customerName }));
+  const [viewerTab, setViewerTab] = useState<ViewerTab>("preview");
+  const previewUrl = buildPreviewUrl({ ...DEFAULTS, customerName });
   const [copied, setCopied] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<string | null>(null);
 
   // Template editor state
-  const [templateCode, setTemplateCode] = useState("");
+  const [templateCode, setTemplateCode] = useState(customTemplateCode);
   const [templateLoading, setTemplateLoading] = useState(false);
   const [templateApplying, setTemplateApplying] = useState(false);
   const [customHtml, setCustomHtml] = useState<string | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const templateFetched = useRef(false);
+  const originalCode = useRef("");
   const templateTextareaRef = useRef<HTMLTextAreaElement>(null);
   const lineNumsRef = useRef<HTMLDivElement>(null);
 
@@ -482,16 +516,6 @@ export function StepTemplate({
     if (templateTextareaRef.current && lineNumsRef.current) {
       lineNumsRef.current.scrollTop = templateTextareaRef.current.scrollTop;
     }
-  }
-
-  function set(key: keyof EmailValues, val: string) {
-    setValues((v) => ({ ...v, [key]: val }));
-  }
-
-  function applyPreview() {
-    setPreviewUrl(buildPreviewUrl(values));
-    onCustomerNameChange(values.customerName);
-    setCustomHtml(null); // reset any custom-rendered preview
   }
 
   async function applyTemplate() {
@@ -508,6 +532,7 @@ export function StepTemplate({
         setRenderError(json.error ?? "Render failed.");
       } else {
         setCustomHtml(json.html);
+        onCustomHtmlChange(json.html);
         setViewerTab("preview");
       }
     } catch (e) {
@@ -517,6 +542,14 @@ export function StepTemplate({
     }
   }
 
+  function resetTemplate() {
+    setTemplateCode(originalCode.current);
+    setCustomHtml(null);
+    onCustomHtmlChange(null);
+    onCustomTemplateCodeChange(originalCode.current);
+    setRenderError(null);
+  }
+
   function copy(name: string, snippet: string) {
     navigator.clipboard.writeText(snippet).catch(() => {});
     setCopied(name);
@@ -524,13 +557,20 @@ export function StepTemplate({
   }
 
   useEffect(() => {
-    if (viewerTab === "preview" && !customHtml) setPreviewUrl(buildPreviewUrl(values));
     if (viewerTab === "template" && !templateFetched.current) {
       templateFetched.current = true;
-      setTemplateLoading(true);
+      const alreadyHasCode = !!customTemplateCode;
+      if (!alreadyHasCode) setTemplateLoading(true);
       fetch("/api/source?file=email-template")
         .then((r) => r.text())
-        .then((src) => { setTemplateCode(src); setTemplateLoading(false); })
+        .then((src) => {
+          originalCode.current = src;
+          if (!alreadyHasCode) {
+            setTemplateCode(src);
+            onCustomTemplateCodeChange(src);
+          }
+          setTemplateLoading(false);
+        })
         .catch(() => setTemplateLoading(false));
     }
   }, [viewerTab]);
@@ -559,35 +599,12 @@ export function StepTemplate({
       {mainTab === "try" && (
         <>
           <p style={s.prose}>
-            Edit the customer details below and click <strong>Apply</strong> to
-            re-render the email. Switch to <strong>Preview</strong> to see it
-            as the customer would, or stay on <strong>Code</strong> to see the
-            send call with your values filled in.
+            Open <strong>Template</strong> to edit the React Email component — copy a snippet from the
+            panel on the right, paste it in, then click <strong>Render preview →</strong> to see the
+            result. Switch to <strong>Preview template</strong> to see the rendered email.
+            Customer details and the send call live in Step 4.
           </p>
 
-          {/* compact fields */}
-          <div style={localStyles.fieldGrid}>
-            {FIELDS.map(({ key, label, wide }) => (
-              <div key={key} style={{ ...localStyles.field, ...(wide ? localStyles.fieldWide : {}) }}>
-                <label style={localStyles.fieldLabel}>{label}</label>
-                <input
-                  style={localStyles.fieldInput}
-                  value={values[key]}
-                  onChange={(e) => set(key, e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && applyPreview()}
-                  spellCheck={false}
-                />
-              </div>
-            ))}
-            <div style={localStyles.applyRow}>
-              <button style={localStyles.applyBtn} onClick={applyPreview}>
-                Apply →
-              </button>
-              <span style={localStyles.applyHint}>or press Enter in any field</span>
-            </div>
-          </div>
-
-          {/* viewer */}
           <div style={localStyles.viewer}>
             <div style={localStyles.viewerBar}>
               <div style={localStyles.viewerDots}>
@@ -597,38 +614,21 @@ export function StepTemplate({
                 <span style={localStyles.viewerTitle}>
                   {viewerTab === "preview"
                     ? customHtml ? "Preview — custom template" : "Your payment didn't go through"
-                    : viewerTab === "template"
-                    ? "emails/billing-failure.tsx — edit & render"
-                    : "resend.emails.send(…)"}
+                    : "emails/billing-failure.tsx — edit & render"}
                 </span>
               </div>
               <div style={localStyles.viewerTabs}>
                 <button
-                  style={{ ...localStyles.viewerTab, ...(viewerTab === "code" ? localStyles.viewerTabActive : {}) }}
-                  onClick={() => setViewerTab("code")}
-                >
-                  Code
-                </button>
-                <button
                   style={{ ...localStyles.viewerTab, ...(viewerTab === "template" ? localStyles.viewerTabActive : {}) }}
                   onClick={() => setViewerTab("template")}
-                >
-                  Template
-                </button>
+                >Template</button>
                 <button
-                  style={{
-                    ...localStyles.viewerTab,
-                    ...(viewerTab === "preview" ? localStyles.viewerTabActive : {}),
-                  }}
+                  style={{ ...localStyles.viewerTab, ...(viewerTab === "preview" ? localStyles.viewerTabActive : {}) }}
                   onClick={() => setViewerTab("preview")}
                 >
                   {customHtml ? "Preview template ●" : "Preview template"}
                 </button>
-                <a
-                  href="/api/source?file=email-template"
-                  download="billing-failure.tsx"
-                  style={localStyles.downloadBtn}
-                >
+                <a href="/api/source?file=email-template" download="billing-failure.tsx" style={localStyles.downloadBtn}>
                   ↓ Download
                 </a>
               </div>
@@ -638,9 +638,6 @@ export function StepTemplate({
               customHtml
                 ? <iframe srcDoc={customHtml} style={localStyles.frame} title="Email preview (custom)" />
                 : <iframe key={previewUrl} src={previewUrl} style={localStyles.frame} title="Email preview" />
-            )}
-            {viewerTab === "code" && (
-              <CodeBlock code={buildCodeSnippet(values)} />
             )}
             {viewerTab === "template" && (
               <div style={{ position: "relative" as const }}>
@@ -657,7 +654,7 @@ export function StepTemplate({
                       ref={templateTextareaRef}
                       style={localStyles.templateTextarea}
                       value={templateCode}
-                      onChange={(e) => setTemplateCode(e.target.value)}
+                      onChange={(e) => { setTemplateCode(e.target.value); onCustomTemplateCodeChange(e.target.value); }}
                       onScroll={syncScroll}
                       spellCheck={false}
                       autoComplete="off"
@@ -666,8 +663,11 @@ export function StepTemplate({
                   </div>
                 )}
                 <div style={localStyles.templateBar}>
-                  {renderError && (
-                    <span style={localStyles.templateError}>{renderError}</span>
+                  {renderError && <span style={localStyles.templateError}>{renderError}</span>}
+                  {!templateLoading && templateCode && (
+                    <button style={localStyles.templateResetBtn} onClick={resetTemplate}>
+                      Reset to original
+                    </button>
                   )}
                   <button
                     style={templateApplying ? localStyles.templateApplyBtnDisabled : localStyles.templateApplyBtn}
@@ -682,71 +682,10 @@ export function StepTemplate({
           </div>
 
           <p style={s.hint}>
-            <strong>Code</strong> — the Resend send call with your values. &nbsp;
-            <strong>Template</strong> — edit <code>billing-failure.tsx</code> directly, paste snippets from the component library below, then click <strong>Render preview →</strong> to see changes. &nbsp;
-            <strong>Preview</strong> — the rendered email, exactly what Resend delivers to the inbox.
+            <strong>Template</strong> — edit the component, paste in snippets from the right panel, click <strong>Render preview →</strong>.{" "}
+            <strong>Preview template</strong> — the rendered email as it will be delivered.
+            {customHtml && <>{" "}<strong style={{ color: "#625DF5" }}>Custom template active</strong> — your edited version will be sent in Step 4.</>}
           </p>
-
-          {/* ── Component library ── */}
-          <div style={localStyles.componentLibraryHeader}>
-            <div>
-              <div style={localStyles.componentLibraryTitle}>React Email component library</div>
-              <div style={localStyles.componentLibrarySubtitle}>
-                Every component available to build or extend your template. Download the template and add these to customize it fully.
-              </div>
-            </div>
-          </div>
-
-          <div style={localStyles.componentGrid}>
-            {COMPONENTS.map((c) => {
-              const isExpanded = expanded === c.name;
-              const isCopied = copied === c.name;
-              const badgeStyle = BADGE_COLORS[c.badge] ?? BADGE_COLORS.text;
-              return (
-                <div key={c.name} style={localStyles.componentCard}>
-                  <div style={localStyles.componentCardHeader}>
-                    <div style={localStyles.componentCardLeft}>
-                      <code style={localStyles.componentTag}>{c.tag}</code>
-                      <span style={{ ...localStyles.componentBadge, background: badgeStyle.bg, color: badgeStyle.color }}>
-                        {c.badge}
-                      </span>
-                      {c.needsImport ? (
-                        <span style={localStyles.importBadgeNew}>+ add to import</span>
-                      ) : (
-                        <span style={localStyles.importBadgeOk}>already imported</span>
-                      )}
-                    </div>
-                    <div style={localStyles.componentCardActions}>
-                      <button
-                        style={localStyles.componentExpandBtn}
-                        onClick={() => setExpanded(isExpanded ? null : c.name)}
-                      >
-                        {isExpanded ? "Hide ↑" : "See snippet ↓"}
-                      </button>
-                      <button
-                        style={{ ...localStyles.componentCopyBtn, ...(isCopied ? localStyles.componentCopyBtnDone : {}) }}
-                        onClick={() => copy(c.name, c.snippet)}
-                      >
-                        {isCopied ? "Copied!" : "Copy"}
-                      </button>
-                    </div>
-                  </div>
-                  <p style={localStyles.componentDesc}>{c.description}</p>
-                  <p style={localStyles.pasteHintText}>
-                    <span style={localStyles.pasteHintLabel}>↳ Where:</span> {c.pasteHint}
-                  </p>
-                  {isExpanded && (
-                    <>
-                      <p style={localStyles.componentWhen}>
-                        <strong>When to use:</strong> {c.when}
-                      </p>
-                      <CodeBlock code={c.snippet} compact />
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
         </>
       )}
 
@@ -804,6 +743,11 @@ export function StepTemplate({
 }
 
 const localStyles: Record<string, React.CSSProperties> = {
+  componentPanelHeader: {
+    paddingBottom: 14,
+    marginBottom: 12,
+    borderBottom: "1px solid #e4e4e7",
+  },
   mainTabBar: {
     display: "flex",
     gap: 2,
@@ -1051,6 +995,18 @@ const localStyles: Record<string, React.CSSProperties> = {
     border: "none",
     borderRadius: 6,
     cursor: "not-allowed",
+    fontFamily: "inherit",
+    flexShrink: 0,
+  },
+  templateResetBtn: {
+    fontSize: 12,
+    fontWeight: 500,
+    padding: "6px 12px",
+    background: "transparent",
+    color: "#71717a",
+    border: "1px solid #3f3f46",
+    borderRadius: 6,
+    cursor: "pointer",
     fontFamily: "inherit",
     flexShrink: 0,
   },
