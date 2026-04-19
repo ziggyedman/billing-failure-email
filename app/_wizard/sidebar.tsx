@@ -85,12 +85,13 @@ export function Sidebar({
 const styles: Record<string, React.CSSProperties> = {
   sidebar: {
     background: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: 12,
+    borderRight: "1px solid #e5e7eb",
     padding: "28px 24px",
-    height: "fit-content",
-    position: "sticky",
-    top: 32,
+    width: 280,
+    flexShrink: 0,
+    height: "100%",
+    overflowY: "auto",
+    boxSizing: "border-box",
   },
   headerBtn: {
     display: "block",

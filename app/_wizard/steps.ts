@@ -24,15 +24,9 @@ export const STEPS: StepDef[] = [
   },
   {
     id: "template",
-    title: "Understand the email template",
-    subtitle: "React Email components that render the billing failure email",
-    duration: "~3 min",
-  },
-  {
-    id: "preview",
-    title: "Preview the email",
-    subtitle: "See exactly what the recipient will see",
-    duration: "~1 min",
+    title: "Email template & live preview",
+    subtitle: "How the template is built — edit values and see changes instantly",
+    duration: "~4 min",
   },
   {
     id: "send",

@@ -5,7 +5,6 @@ import { STEPS } from "./_wizard/steps";
 import { StepAccount } from "./_wizard/step-account";
 import { StepDomain } from "./_wizard/step-domain";
 import { StepTemplate } from "./_wizard/step-template";
-import { StepPreview } from "./_wizard/step-preview";
 import { StepSend } from "./_wizard/step-send";
 import { Sidebar } from "./_wizard/sidebar";
 
@@ -203,12 +202,6 @@ export default function Home() {
                   />
                 )}
                 {current === 3 && (
-                  <StepPreview
-                    onComplete={() => markComplete(3)}
-                    alreadyCompleted={state.completed[3]}
-                  />
-                )}
-                {current === 4 && (
                   <StepSend
                     apiKey={state.apiKey}
                     fromEmail={state.fromEmail}
@@ -217,8 +210,8 @@ export default function Home() {
                     completed={state.completed}
                     onToEmailChange={(v) => update("toEmail", v)}
                     onCustomerNameChange={(v) => update("customerName", v)}
-                    onComplete={() => markComplete(4)}
-                    alreadyCompleted={state.completed[4]}
+                    onComplete={() => markComplete(3)}
+                    alreadyCompleted={state.completed[3]}
                   />
                 )}
               </div>
@@ -232,23 +225,23 @@ export default function Home() {
 
 const styles: Record<string, React.CSSProperties> = {
   main: {
-    minHeight: "100vh",
+    height: "100vh",
+    display: "flex",
+    overflow: "hidden",
     background: "#f6f7f9",
-    padding: "32px 16px",
   },
   shell: {
-    maxWidth: 1100,
-    margin: "0 auto",
-    display: "grid",
-    gridTemplateColumns: "320px 1fr",
-    gap: 24,
+    display: "flex",
+    flex: 1,
+    width: "100%",
+    overflow: "hidden",
   },
   content: {
+    flex: 1,
+    overflowY: "auto",
     background: "#ffffff",
-    border: "1px solid #e5e7eb",
-    borderRadius: 12,
+    borderLeft: "1px solid #e5e7eb",
     padding: "32px 40px 40px",
-    minHeight: 560,
   },
   contentHeader: {
     borderBottom: "1px solid #e5e7eb",
@@ -315,7 +308,7 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: "pointer",
   },
   loadingMain: {
-    minHeight: "100vh",
+    height: "100vh",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",

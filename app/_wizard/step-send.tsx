@@ -47,7 +47,7 @@ export function StepSend({
     }
   }, [tab, source]);
 
-  const allPriorComplete = completed.slice(0, 4).every(Boolean);
+  const allPriorComplete = completed.slice(0, 3).every(Boolean);
   const canSend =
     allPriorComplete &&
     /@.+\..+/.test(toEmail.trim()) &&
