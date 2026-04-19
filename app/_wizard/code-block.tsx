@@ -1,6 +1,14 @@
 "use client";
 
-export function CodeBlock({ code, compact = false }: { code: string; compact?: boolean }) {
+export function CodeBlock({
+  code,
+  compact = false,
+  inContainer = false,
+}: {
+  code: string;
+  compact?: boolean;
+  inContainer?: boolean;
+}) {
   const lines = code.split("\n");
   const fs = compact ? 11.5 : 12.5;
   const gutterW = compact ? 28 : 36;
@@ -11,8 +19,8 @@ export function CodeBlock({ code, compact = false }: { code: string; compact?: b
       display: "flex",
       overflowX: "auto",
       background: "#18181b",
-      borderRadius: compact ? 6 : 0,
-      marginTop: compact ? 10 : 0,
+      borderRadius: inContainer ? 0 : compact ? 6 : 0,
+      marginTop: inContainer ? 0 : compact ? 10 : 0,
       marginBottom: 0,
     }}>
       <div style={{
@@ -55,34 +63,34 @@ export function CodeBlock({ code, compact = false }: { code: string; compact?: b
 export function FileCodeBlock({ filename, code }: { filename: string; code: string }) {
   return (
     <div style={{
-      border: "1px solid #27272a",
+      border: "1px solid #e4e4e7",
       borderRadius: 8,
       overflow: "hidden",
       marginTop: 12,
+      background: "#fafafa",
     }}>
       <div style={{
-        background: "#27272a",
+        background: "#f4f4f5",
+        borderBottom: "1px solid #e4e4e7",
         padding: "0 12px",
         display: "flex",
         alignItems: "center",
         gap: 6,
-        minHeight: 36,
-        borderBottom: "1px solid #3f3f46",
+        minHeight: 40,
       }}>
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#3f3f46", flexShrink: 0 }} />
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#3f3f46", flexShrink: 0 }} />
-        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#3f3f46", flexShrink: 0 }} />
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#d4d4d8", flexShrink: 0 }} />
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#d4d4d8", flexShrink: 0 }} />
+        <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#d4d4d8", flexShrink: 0 }} />
         <span style={{
-          marginLeft: 8,
-          fontSize: 11,
-          color: "#a1a1aa",
+          marginLeft: 10,
+          fontSize: 12,
+          color: "#71717a",
           fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
-          letterSpacing: "0.1px",
         }}>
           {filename}
         </span>
       </div>
-      <CodeBlock code={code} compact />
+      <CodeBlock code={code} compact inContainer />
     </div>
   );
 }
