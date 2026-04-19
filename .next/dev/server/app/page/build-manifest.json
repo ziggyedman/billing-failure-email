@@ -1,0 +1,22 @@
+{
+  "devFiles": [],
+  "ampDevFiles": [],
+  "polyfillFiles": [
+    "static/chunks/0yqm_next_dist_build_polyfills_polyfill-nomodule.js"
+  ],
+  "lowPriorityFiles": [],
+  "rootMainFiles": [
+    "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_0_217tw._.js",
+    "static/chunks/0yqm_next_dist_compiled_next-devtools_index_07ssqhh.js",
+    "static/chunks/0yqm_next_dist_compiled_react-dom_0ftao0x._.js",
+    "static/chunks/0yqm_next_dist_compiled_react-server-dom-turbopack_0lb2us.._.js",
+    "static/chunks/0yqm_next_dist_compiled_0sxe2aw._.js",
+    "static/chunks/0yqm_next_dist_client_0m3nwz-._.js",
+    "static/chunks/0yqm_next_dist_0jvu2oo._.js",
+    "static/chunks/0yqm_@swc_helpers_cjs_0yvya32._.js",
+    "static/chunks/Documents_GitHub_billing-failure-email_0rqeker._.js",
+    "static/chunks/turbopack-Documents_GitHub_billing-failure-email_046gwk.._.js"
+  ],
+  "pages": {},
+  "ampFirstPages": []
+}

@@ -1,0 +1,11 @@
+var R=require("../../../chunks/[turbopack]_runtime.js")("server/app/api/render-custom/route.js")
+R.c("server/chunks/Documents_GitHub_billing-failure-email_07rbtc~._.js")
+R.c("server/chunks/0yqm_next_dist_12ns3s-._.js")
+R.c("server/chunks/0yqm_entities_lib_esm_0k6v917._.js")
+R.c("server/chunks/0yqm_@react-email_code-block_dist_index_mjs_047uwya._.js")
+R.c("server/chunks/0yqm_@react-email_tailwind_dist_index_mjs_03oqok5._.js")
+R.c("server/chunks/[root-of-the-server]__0.nb-5v._.js")
+R.c("server/chunks/[root-of-the-server]__02a-5d_._.js")
+R.c("server/chunks/03gi__next-internal_server_app_api_render-custom_route_actions_08.v4c..js")
+R.m("[project]/Documents/GitHub/billing-failure-email/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/Documents/GitHub/billing-failure-email/app/api/render-custom/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)")
+module.exports=R.m("[project]/Documents/GitHub/billing-failure-email/node_modules/next/dist/esm/build/templates/app-route.js { INNER_APP_ROUTE => \"[project]/Documents/GitHub/billing-failure-email/app/api/render-custom/route.ts [app-route] (ecmascript)\" } [app-route] (ecmascript)").exports
