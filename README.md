@@ -1,20 +1,19 @@
 # Send a billing-failure email — interactive tutorial
 
-An interactive guide to sending billing failure emails with React Email and Resend. Each step covers a concrete piece of the implementation — creating an account, verifying a sending domain, understanding the email template, previewing the rendered output, and firing a live send through a Next.js API route.
+An interactive guide to sending billing failure emails with React Email and Resend. Each step covers a concrete piece of the implementation — creating an account, verifying a sending domain, exploring the email template with a live preview, and firing a real send through a Next.js API route.
 
 The wizard is the tutorial. Instead of a static guide, every step shows the real code from this repo and lets you run it. The email template is written with React Email, the sending code runs in a Next.js App Router route, and this README is the written companion that goes deeper on each step.
 
-## The five steps
+## The four steps
 
 | # | Step | What happens |
 |---|---|---|
 | 1 | **Create a Resend account** | Sign up, generate an API key, paste it into the app |
 | 2 | **Verify your sending domain** | Add DNS records so Resend can send from your domain |
-| 3 | **Understand the template** | Tour the React Email component in `emails/billing-failure.tsx` |
-| 4 | **Preview the email** | Toggle between the live rendered preview and the component source; download the template |
-| 5 | **Send it** | Fill in from/to, inspect the Next.js route code, hit send |
+| 3 | **Email template & live preview** | Edit customer values, see the rendered email update instantly, inspect the React Email source, download the template |
+| 4 | **Send it** | Fill in from/to, inspect the Next.js route code, hit send |
 
-You can navigate any step at any time — the sidebar is never locked. Each step has a **Mark complete** button you click manually. Once all five are marked, the Send button in Step 5 activates and you can fire a real email.
+You can navigate any step at any time — the sidebar is never locked. Each step has a **Mark complete** button you click manually. Once all four are marked, the Send button in Step 4 activates and you can fire a real email.
 
 State (API key, progress, inputs) is persisted in `localStorage`, so refreshing the page keeps everything intact. Use **Reset progress** in the sidebar to start fresh.
 
@@ -29,12 +28,11 @@ State (API key, progress, inputs) is persisted in `localStorage`, so refreshing 
 │   │   ├── sidebar.tsx               ← progress sidebar (title is clickable → home)
 │   │   ├── step-account.tsx          ← Step 1
 │   │   ├── step-domain.tsx           ← Step 2
-│   │   ├── step-template.tsx         ← Step 3
-│   │   ├── step-preview.tsx          ← Step 4 (Preview / Code tabs + download)
-│   │   ├── step-send.tsx             ← Step 5 (Send form / Route code tabs)
+│   │   ├── step-template.tsx         ← Step 3 (editable fields + Preview / Code tabs + download)
+│   │   ├── step-send.tsx             ← Step 4 (Send form / Route code tabs)
 │   │   └── step-styles.tsx           ← shared styles + CompletedBadge
 │   └── api/
-│       ├── preview/route.ts          ← renders the email to HTML for the iframe
+│       ├── preview/route.ts          ← renders the email to HTML for the iframe (accepts query params)
 │       ├── source/route.ts           ← serves raw source files (allowlisted)
 │       └── send-billing-failure/route.ts   ← calls Resend to send the email
 ├── emails/
@@ -102,21 +100,16 @@ Resend requires DNS verification before it will send from an address on your dom
 
 1. Go to [resend.com/domains](https://resend.com/domains) → **Add Domain**. Enter your domain and pick the nearest region.
 2. Resend shows the DNS records to add. Leave that tab open.
-3. In your DNS provider (Namecheap, Cloudflare, etc.), add each record exactly as shown.
+3. In your DNS provider (Namecheap, Cloudflare, etc.), add each record exactly as shown. The **Host** field is just the subdomain part — if Resend shows `send.yourdomain.com`, type only `send`, not the full domain.
 4. Click **Verify DNS Records** in Resend. Propagation usually takes a few minutes, occasionally up to an hour. [dnschecker.org](https://dnschecker.org) lets you confirm what's live.
-
-**Namecheap-specific gotchas:**
-
-1. Namecheap's Host field auto-appends your domain. If Resend shows a record for `send.yourdomain.com`, type only `send` in Host — not the full domain — or you end up with `send.yourdomain.com.yourdomain.com`.
-2. Leave TTL on **Automatic**.
-3. For long TXT values (DKIM keys especially), paste exactly as shown — no extra quotes, no line breaks.
-4. MX records need a **priority** value. Resend specifies it (usually `10`).
 
 Once verified, enter your sending address in the Step 2 form field (e.g. `billing@yourdomain.com`). You can use any local-part — Resend only checks that the domain is verified.
 
-### Step 3 — The React Email template
+### Step 3 — Email template & live preview
 
-The template lives at `emails/billing-failure.tsx` and is a regular React component whose output is email-safe HTML:
+Step 3 combines the template explanation with an interactive preview. Edit any of the customer-specific fields (name, amount, card last 4, failure reason, next retry date, company name) and click **Apply** to re-render the email with your values.
+
+**The template** lives at `emails/billing-failure.tsx` and is a regular React component whose output is email-safe HTML:
 
 ```tsx
 import { Html, Head, Body, Container, Button, Preview, /* ... */ } from "@react-email/components";
@@ -138,36 +131,44 @@ export const BillingFailureEmail = ({ customerName, amount, cardLast4, ... }) =>
 
 **Styles are inline objects**, not class-based. Email clients strip external stylesheets and ignore most CSS selectors. React Email's components emit table-based HTML under the hood, so you write modern React and the library handles cross-client compatibility.
 
-**Everything that varies per recipient is a prop.** The component is a pure function of its props: `customerName`, `amount`, `currency`, `cardLast4`, `failureReason`, `nextRetryDate`, `updatePaymentUrl`, `supportUrl`. No side effects, no fetches — the same component renders into an iframe for preview, and renders into the email payload for sending.
+**Everything that varies per recipient is a prop.** The component is a pure function of its props — no side effects, no fetches. The same component renders into the iframe for the live preview and renders into the email payload when sending.
 
-### Step 4 — Preview
-
-Step 4 has two tabs:
-
-**Preview** — an iframe that loads `/api/preview`, which calls React Email's `render()` server-side and returns the HTML:
+**The Preview tab** loads `/api/preview` with the edited values passed as query params:
 
 ```ts
 // app/api/preview/route.ts
 import { render } from "@react-email/components";
 import BillingFailureEmail from "@/emails/billing-failure";
 
-export async function GET() {
-  const html = await render(BillingFailureEmail({ customerName: "Alex", /* ... */ }));
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const get = (key: string, fallback: string) => searchParams.get(key) || fallback;
+
+  const html = await render(
+    BillingFailureEmail({
+      customerName:  get("customerName",  "Alex"),
+      amount:        get("amount",        "29.00"),
+      cardLast4:     get("cardLast4",     "4242"),
+      failureReason: get("failureReason", "Your card was declined (insufficient_funds)."),
+      // ...
+    })
+  );
+
   return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
 }
 ```
 
 `render()` is the same function Resend uses internally when you pass `react:` to `resend.emails.send()`. What the iframe shows is byte-for-byte what gets delivered.
 
-**Code** — fetches `emails/billing-failure.tsx` from `/api/source?file=email-template` and displays the raw source. The source route reads the file at runtime from disk (allowlisted paths only) and serves it as plain text.
+**The Code tab** shows the `resend.emails.send()` call with your current field values filled in — it updates live as you edit.
 
-A **↓ Download** button in the tab bar lets you save `billing-failure.tsx` directly to your machine.
+**↓ Download** saves `billing-failure.tsx` directly to your machine.
 
-### Step 5 — Sending
+### Step 4 — Sending
 
-Step 5 has two tabs:
+Step 4 has two tabs:
 
-**Send form** — fill in the recipient address and customer name, then click **Send the email**. The form is only active once Steps 1–4 are each marked complete.
+**Send form** — fill in the recipient address and customer name, then click **Send the email**. The form is only active once Steps 1–3 are each marked complete.
 
 **Route code** — displays `app/api/send-billing-failure/route.ts` verbatim, fetched from `/api/source?file=send-route`. This is the exact Next.js App Router file that runs when you hit send:
 
@@ -272,7 +273,7 @@ export async function POST(req: Request) {
 | `from` address rejected | Domain not verified in Resend, or the address uses a domain you haven't added. Check [resend.com/domains](https://resend.com/domains). |
 | Delivered in dashboard but never arrived | Check spam. If it's flagged, DKIM/SPF isn't set up correctly — re-verify the domain. |
 | "No API key" error on send | Neither the Step 1 field nor the `RESEND_API_KEY` env var is set. |
-| Send button stays disabled | Steps 1–4 must each be manually marked complete. Click the **Mark complete** button at the bottom of each step. |
+| Send button stays disabled | Steps 1–3 must each be manually marked complete. Click the **Mark complete** button at the bottom of each step. |
 | Build fails on Render | Usually a Node version mismatch. Pin a Node version in Render's settings or add `engines.node` to `package.json`. |
 
 ## References

@@ -110,6 +110,7 @@ export default function Home() {
         />
 
         <div style={styles.content}>
+          <div style={styles.contentInner}>
           {isHome ? (
             <>
               <header style={styles.contentHeader}>
@@ -123,17 +124,15 @@ export default function Home() {
               </header>
               <div style={styles.contentBody}>
                 <p style={styles.introProse}>
-                  This is an interactive guide to sending a billing failure email using Next.js,  
-                  React Email and Resend. Each step covers a piece of
-                  the implementation. From creating an account, verifying a sending
-                  domain, getting a glimpse of how the email template is built, previewing the
-                  rendered template, and sending the email through a Next.js API
-                  route.
+                  This is an interactive companion tutorial to sending a billing failure email using Next.js, React Email and Resend. 
+                  It's a full step-by-step tutorial that walks you through the entire process, from start to finish.
+                  From creating a Resend account, verifying a sending domain, building the email template, and finally sending the email, every step is covered in detail with live code and previews.
+                  
                 </p>
                 <p style={styles.introProse}>
-                  The email template is written as a React component using React
-                  Email. The sending code runs in a Next.js App Router API
-                  route. Every step shows the actual code from the repo and a live preview of the email. You can interact with the code and preview at each step, and see how changes affect the final output in real time.
+                  The email template is written as a React component using React Email.
+                  The sending code runs in a Next.js App Router API route.
+                  Every step shows the actual code from the repo and a live preview of the email. You can interact with the code and preview at each step, and see how changes affect the final output in real time.
                   The full written guide lives in the{" "}
                   <a
                     href="https://github.com/ziggyedman/billing-failure-email/blob/main/README.md"
@@ -197,6 +196,8 @@ export default function Home() {
                 )}
                 {current === 2 && (
                   <StepTemplate
+                    customerName={state.customerName}
+                    onCustomerNameChange={(v) => update("customerName", v)}
                     onComplete={() => markComplete(2)}
                     alreadyCompleted={state.completed[2]}
                   />
@@ -209,7 +210,6 @@ export default function Home() {
                     customerName={state.customerName}
                     completed={state.completed}
                     onToEmailChange={(v) => update("toEmail", v)}
-                    onCustomerNameChange={(v) => update("customerName", v)}
                     onComplete={() => markComplete(3)}
                     alreadyCompleted={state.completed[3]}
                   />
@@ -217,6 +217,7 @@ export default function Home() {
               </div>
             </>
           )}
+          </div>
         </div>
       </div>
     </main>
@@ -228,7 +229,7 @@ const styles: Record<string, React.CSSProperties> = {
     height: "100vh",
     display: "flex",
     overflow: "hidden",
-    background: "#f6f7f9",
+    background: "#fafafa",
   },
   shell: {
     display: "flex",
@@ -240,53 +241,60 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1,
     overflowY: "auto",
     background: "#ffffff",
-    borderLeft: "1px solid #e5e7eb",
-    padding: "32px 40px 40px",
+    borderLeft: "1px solid #e4e4e7",
+  },
+  contentInner: {
+    maxWidth: 760,
+    margin: "0 auto",
+    padding: "48px 48px 64px",
   },
   contentHeader: {
-    borderBottom: "1px solid #e5e7eb",
-    paddingBottom: 20,
-    marginBottom: 28,
+    borderBottom: "1px solid #e4e4e7",
+    paddingBottom: 24,
+    marginBottom: 32,
   },
   stepLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 600,
-    textTransform: "uppercase",
-    letterSpacing: "0.6px",
-    color: "#6b7280",
-    marginBottom: 6,
+    textTransform: "uppercase" as const,
+    letterSpacing: "0.7px",
+    color: "#71717a",
+    marginBottom: 8,
   },
   contentTitle: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: 700,
-    color: "#111827",
+    color: "#18181b",
     margin: "0 0 6px",
-    lineHeight: 1.2,
+    lineHeight: 1.25,
+    letterSpacing: "-0.3px",
   },
   contentSubtitle: {
-    fontSize: 15,
-    color: "#6b7280",
+    fontSize: 14,
+    color: "#71717a",
     margin: 0,
-    lineHeight: 1.5,
+    lineHeight: 1.6,
   },
   contentBody: {},
   introProse: {
     fontSize: 15,
-    lineHeight: 1.7,
-    color: "#374151",
+    lineHeight: 1.75,
+    color: "#3f3f46",
     margin: "0 0 16px",
   },
   introLink: {
-    color: "#2563eb",
+    color: "#18181b",
     textDecoration: "underline",
+    textUnderlineOffset: "3px",
   },
   videoWrapper: {
     position: "relative",
     paddingBottom: "56.25%",
     height: 0,
-    marginBottom: 20,
-    borderRadius: 8,
+    marginBottom: 24,
+    borderRadius: 10,
     overflow: "hidden",
+    border: "1px solid #e4e4e7",
   },
   videoIframe: {
     position: "absolute",
@@ -298,27 +306,28 @@ const styles: Record<string, React.CSSProperties> = {
   },
   startBtn: {
     marginTop: 8,
-    background: "#111827",
+    background: "#18181b",
     color: "#ffffff",
     border: "none",
-    borderRadius: 6,
+    borderRadius: 8,
     padding: "10px 20px",
     fontSize: 14,
     fontWeight: 600,
     cursor: "pointer",
+    letterSpacing: "-0.1px",
   },
   loadingMain: {
     height: "100vh",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "#f6f7f9",
+    background: "#fafafa",
   },
   loadingDot: {
     width: 8,
     height: 8,
-    background: "#111827",
+    background: "#18181b",
     borderRadius: "50%",
-    opacity: 0.4,
+    opacity: 0.3,
   },
 };

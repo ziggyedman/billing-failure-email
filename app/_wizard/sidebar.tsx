@@ -26,14 +26,14 @@ export function Sidebar({
     <aside style={styles.sidebar}>
       <button onClick={onHome} style={styles.headerBtn}>
         <div style={styles.eyebrow}>Tutorial</div>
-        <h2 style={styles.title}>Send a billing-failure email</h2>
-        <p style={styles.byline}>with Next.js, React Email, and Resend</p>
+        <h2 style={styles.title}>Billing-failure email</h2>
+        <p style={styles.byline}>Next.js · React Email · Resend</p>
       </button>
 
       <div style={styles.progress}>
         <div style={styles.progressHeader}>
           <span style={styles.progressLabel}>Progress</span>
-          <span style={styles.progressPct}>{percent}%</span>
+          <span style={styles.progressPct}>{completedCount}/{steps.length}</span>
         </div>
         <div style={styles.progressBar}>
           <div style={{ ...styles.progressFill, width: `${percent}%` }} />
@@ -50,8 +50,8 @@ export function Sidebar({
               <button
                 onClick={() => onSelect(i)}
                 style={{
-                  ...styles.itemButton,
-                  ...(isCurrent ? styles.itemButtonCurrent : {}),
+                  ...styles.itemBtn,
+                  ...(isCurrent ? styles.itemBtnActive : {}),
                 }}
               >
                 <span
@@ -61,7 +61,13 @@ export function Sidebar({
                     ...(isCurrent && !isCompleted ? styles.circleCurrent : {}),
                   }}
                 >
-                  {isCompleted ? "✓" : i + 1}
+                  {isCompleted ? (
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                      <path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  ) : (
+                    <span style={styles.circleNum}>{i + 1}</span>
+                  )}
                 </span>
                 <span style={styles.itemText}>
                   <span style={styles.itemTitle}>{step.title}</span>
@@ -84,14 +90,16 @@ export function Sidebar({
 
 const styles: Record<string, React.CSSProperties> = {
   sidebar: {
-    background: "#ffffff",
-    borderRight: "1px solid #e5e7eb",
-    padding: "28px 24px",
-    width: 280,
+    background: "#fafafa",
+    borderRight: "1px solid #e4e4e7",
+    padding: "32px 20px 24px",
+    width: 268,
     flexShrink: 0,
     height: "100%",
     overflowY: "auto",
     boxSizing: "border-box",
+    display: "flex",
+    flexDirection: "column",
   },
   headerBtn: {
     display: "block",
@@ -100,30 +108,32 @@ const styles: Record<string, React.CSSProperties> = {
     background: "transparent",
     border: "none",
     padding: "0 0 20px",
-    borderBottom: "1px solid #e5e7eb",
+    borderBottom: "1px solid #e4e4e7",
     marginBottom: 20,
     cursor: "pointer",
     fontFamily: "inherit",
   },
   eyebrow: {
-    fontSize: 11,
+    fontSize: 10,
     fontWeight: 700,
-    letterSpacing: "0.8px",
+    letterSpacing: "0.9px",
     textTransform: "uppercase",
-    color: "#6b7280",
+    color: "#a1a1aa",
     marginBottom: 6,
   },
   title: {
-    fontSize: 17,
+    fontSize: 15,
     fontWeight: 700,
-    color: "#111827",
+    color: "#18181b",
     margin: "0 0 4px",
     lineHeight: 1.3,
+    letterSpacing: "-0.2px",
   },
   byline: {
     fontSize: 12,
-    color: "#6b7280",
+    color: "#a1a1aa",
     margin: 0,
+    letterSpacing: "0.1px",
   },
   progress: {
     marginBottom: 20,
@@ -132,80 +142,84 @@ const styles: Record<string, React.CSSProperties> = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 6,
+    marginBottom: 7,
   },
   progressLabel: {
-    fontSize: 12,
-    color: "#6b7280",
+    fontSize: 11,
+    color: "#a1a1aa",
     fontWeight: 500,
+    letterSpacing: "0.2px",
   },
   progressPct: {
-    fontSize: 12,
-    color: "#111827",
+    fontSize: 11,
+    color: "#71717a",
     fontWeight: 600,
   },
   progressBar: {
-    height: 4,
-    background: "#f3f4f6",
-    borderRadius: 2,
+    height: 3,
+    background: "#e4e4e7",
+    borderRadius: 99,
     overflow: "hidden",
   },
   progressFill: {
     height: "100%",
-    background: "#111827",
-    transition: "width 300ms ease",
+    background: "#18181b",
+    borderRadius: 99,
+    transition: "width 400ms ease",
   },
   list: {
     listStyle: "none",
     padding: 0,
     margin: 0,
+    flex: 1,
   },
   item: {
     margin: 0,
   },
-  itemButton: {
+  itemBtn: {
     display: "flex",
-    alignItems: "center",
+    alignItems: "flex-start",
     width: "100%",
-    gap: 12,
-    padding: "10px 8px",
-    margin: "2px 0",
+    gap: 10,
+    padding: "8px 10px",
+    margin: "1px 0",
     background: "transparent",
     border: "none",
-    borderRadius: 6,
+    borderRadius: 7,
     textAlign: "left",
     cursor: "pointer",
-    transition: "background 150ms ease",
+    transition: "background 120ms ease",
+    fontFamily: "inherit",
   },
-  itemButtonCurrent: {
-    background: "#f3f4f6",
-  },
-  itemButtonLocked: {
-    opacity: 0.45,
-    cursor: "not-allowed",
+  itemBtnActive: {
+    background: "#f0f0f0",
   },
   circle: {
-    width: 24,
-    height: 24,
+    width: 22,
+    height: 22,
     borderRadius: "50%",
-    background: "#f3f4f6",
-    border: "1px solid #e5e7eb",
-    color: "#6b7280",
-    fontSize: 12,
-    fontWeight: 600,
+    background: "#ffffff",
+    border: "1px solid #d4d4d8",
+    color: "#a1a1aa",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
+    marginTop: 1,
   },
   circleDone: {
-    background: "#111827",
-    borderColor: "#111827",
+    background: "#18181b",
+    borderColor: "#18181b",
     color: "#ffffff",
   },
   circleCurrent: {
-    borderColor: "#111827",
-    color: "#111827",
+    borderColor: "#18181b",
+    color: "#18181b",
+  },
+  circleNum: {
+    fontSize: 11,
+    fontWeight: 600,
+    lineHeight: 1,
   },
   itemText: {
     display: "flex",
@@ -216,25 +230,27 @@ const styles: Record<string, React.CSSProperties> = {
   itemTitle: {
     fontSize: 13,
     fontWeight: 500,
-    color: "#111827",
-    lineHeight: 1.3,
+    color: "#18181b",
+    lineHeight: 1.4,
   },
   itemDuration: {
     fontSize: 11,
-    color: "#9ca3af",
+    color: "#a1a1aa",
   },
   footer: {
-    marginTop: 24,
-    paddingTop: 20,
-    borderTop: "1px solid #e5e7eb",
+    marginTop: 20,
+    paddingTop: 16,
+    borderTop: "1px solid #e4e4e7",
   },
   resetBtn: {
     background: "transparent",
     border: "none",
-    color: "#6b7280",
+    color: "#a1a1aa",
     fontSize: 12,
     cursor: "pointer",
     padding: 0,
+    fontFamily: "inherit",
     textDecoration: "underline",
+    textUnderlineOffset: "2px",
   },
 };
