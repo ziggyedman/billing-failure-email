@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { stepStyles as s, CompletedBadge, NumberedSection } from "./step-styles";
 import { FileCodeBlock } from "./code-block";
 
@@ -35,6 +35,18 @@ export function StepSend({
 }: StepSendProps) {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [mainTab, setMainTab] = useState<MainTab>("send");
+  const [sourceLines, setSourceLines] = useState<string[]>([]);
+
+  useEffect(() => {
+    fetch("/api/source?file=send-route")
+      .then((r) => r.text())
+      .then((src) => setSourceLines(src.split("\n")));
+  }, []);
+
+  function lines(start: number, end: number): string {
+    if (!sourceLines.length) return "Loading…";
+    return sourceLines.slice(start - 1, end).join("\n");
+  }
 
   const allPriorComplete = completed.slice(0, 3).every(Boolean);
   const canSend =
@@ -187,11 +199,7 @@ export function StepSend({
             back to environment variables if any are missing. So the app works
             whether the user pastes their own key in Step 1 or the deployer
             pre-sets one on the server.
-            <FileCodeBlock filename="app/api/send-billing-failure/route.ts" code={`const body   = await request.json();
-const apiKey = body.apiKey?.trim() || process.env.RESEND_API_KEY;
-const from   = body.from?.trim()   || process.env.FROM_EMAIL
-                                    || "onboarding@resend.dev";
-const to     = body.to?.trim();`} />
+            <FileCodeBlock filename="app/api/send-billing-failure/route.ts" code={lines(17, 45)} startLine={17} />
           </NumberedSection>
 
           <NumberedSection num={2} title="Authenticate with the Resend SDK">
@@ -199,9 +207,8 @@ const to     = body.to?.trim();`} />
             authenticates the request. Resend verifies the key against your
             account and allows sending from your verified domain. A new client
             is created per request so there's no shared state between calls.
-            <FileCodeBlock filename="app/api/send-billing-failure/route.ts" code={`import { Resend } from "resend";
-
-const resend = new Resend(apiKey);`} />
+            <FileCodeBlock filename="app/api/send-billing-failure/route.ts" code={lines(1, 2)} startLine={1} />
+            <FileCodeBlock filename="app/api/send-billing-failure/route.ts" code={lines(47, 47)} startLine={47} />
           </NumberedSection>
 
           <NumberedSection num={3} title="Render the email template and send">
@@ -212,23 +219,8 @@ const resend = new Resend(apiKey);`} />
             converting the component to HTML and generating a plain-text
             fallback automatically. The customer details (name, amount, card,
             reason, retry date) are injected at send time.
-            <FileCodeBlock filename="app/api/send-billing-failure/route.ts" code={`import BillingFailureEmail from "@/emails/billing-failure";
-
-const { data, error } = await resend.emails.send({
-  from,
-  to: [to],
-  subject: "Your payment didn't go through",
-  react: BillingFailureEmail({
-    customerName,
-    amount:           "29.00",
-    currency:         "USD",
-    cardLast4:        "4242",
-    failureReason:    "Card declined (insufficient_funds).",
-    nextRetryDate:    "in 3 days",
-    updatePaymentUrl: "https://example.com/billing",
-    supportUrl:       "https://example.com/support",
-  }),
-});`} />
+            <FileCodeBlock filename="app/api/send-billing-failure/route.ts" code={lines(2, 2)} startLine={2} />
+            <FileCodeBlock filename="app/api/send-billing-failure/route.ts" code={lines(49, 66)} startLine={49} />
           </NumberedSection>
 
           <NumberedSection num={4} title="Handle the response">
@@ -237,9 +229,7 @@ const { data, error } = await resend.emails.send({
             If anything goes wrong. Wrong API key, unverified domain, invalid
             recipient, rate limit. The error message from Resend is surfaced
             directly so you know exactly what to fix.
-            <FileCodeBlock filename="app/api/send-billing-failure/route.ts" code={`if (error) return Response.json({ error }, { status: 500 });
-return Response.json(data);
-// success: { id: "msg_xxxxxxxxxxxx" }`} />
+            <FileCodeBlock filename="app/api/send-billing-failure/route.ts" code={lines(68, 72)} startLine={68} />
           </NumberedSection>
 
           <NumberedSection num={5} title="Track the send in Resend" last>

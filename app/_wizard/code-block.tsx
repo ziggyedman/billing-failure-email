@@ -4,10 +4,12 @@ export function CodeBlock({
   code,
   compact = false,
   inContainer = false,
+  startLine = 1,
 }: {
   code: string;
   compact?: boolean;
   inContainer?: boolean;
+  startLine?: number;
 }) {
   const lines = code.split("\n");
   const fs = compact ? 11.5 : 12.5;
@@ -37,7 +39,7 @@ export function CodeBlock({
         userSelect: "none",
         borderRight: "1px solid #27272a",
       }}>
-        {lines.map((_, i) => <div key={i}>{i + 1}</div>)}
+        {lines.map((_, i) => <div key={i}>{startLine + i}</div>)}
       </div>
       <pre style={{
         margin: 0,
@@ -60,7 +62,15 @@ export function CodeBlock({
   );
 }
 
-export function FileCodeBlock({ filename, code }: { filename: string; code: string }) {
+export function FileCodeBlock({
+  filename,
+  code,
+  startLine = 1,
+}: {
+  filename: string;
+  code: string;
+  startLine?: number;
+}) {
   return (
     <div style={{
       border: "1px solid #e4e4e7",
@@ -90,7 +100,7 @@ export function FileCodeBlock({ filename, code }: { filename: string; code: stri
           {filename}
         </span>
       </div>
-      <CodeBlock code={code} compact inContainer />
+      <CodeBlock code={code} compact inContainer startLine={startLine} />
     </div>
   );
 }
