@@ -497,7 +497,7 @@ export function StepTemplate({
   onCustomHtmlChange,
 }: StepTemplateProps) {
   const [mainTab, setMainTab] = useState<MainTab>("try");
-  const [viewerTab, setViewerTab] = useState<ViewerTab>("preview");
+  const [viewerTab, setViewerTab] = useState<ViewerTab>("template");
   const previewUrl = buildPreviewUrl({ ...DEFAULTS, customerName });
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -600,9 +600,8 @@ export function StepTemplate({
         <>
           <p style={s.prose}>
             Open <strong>Template</strong> to edit the React Email component — copy a snippet from the
-            panel on the right, paste it in, then click <strong>Render preview →</strong> to see the
-            result. Switch to <strong>Preview template</strong> to see the rendered email.
-            Customer details and the send call live in Step 4.
+            panel on the right and paste it in. Click <strong>Preview template</strong> to render and
+            preview the result. Customer details and the send call live in Step 4.
           </p>
 
           <div style={localStyles.viewer}>
@@ -624,7 +623,10 @@ export function StepTemplate({
                 >Template</button>
                 <button
                   style={{ ...localStyles.viewerTab, ...(viewerTab === "preview" ? localStyles.viewerTabActive : {}) }}
-                  onClick={() => setViewerTab("preview")}
+                  onClick={() => {
+                    setViewerTab("preview");
+                    if (templateCode && !templateLoading) applyTemplate();
+                  }}
                 >
                   {customHtml ? "Preview template ●" : "Preview template"}
                 </button>
@@ -635,7 +637,17 @@ export function StepTemplate({
             </div>
 
             {viewerTab === "preview" && (
-              customHtml
+              templateApplying
+                ? <div style={localStyles.templateLoading}>Rendering preview…</div>
+                : renderError
+                ? (
+                  <div style={localStyles.previewErrorPane}>
+                    <strong style={{ color: "#f87171" }}>Render failed</strong>
+                    <span style={localStyles.previewErrorMsg}>{renderError}</span>
+                    <span style={localStyles.previewErrorHint}>Switch to Template to fix it, then click Preview template again.</span>
+                  </div>
+                )
+                : customHtml
                 ? <iframe srcDoc={customHtml} style={localStyles.frame} title="Email preview (custom)" />
                 : <iframe key={previewUrl} src={previewUrl} style={localStyles.frame} title="Email preview" />
             )}
@@ -682,8 +694,8 @@ export function StepTemplate({
           </div>
 
           <p style={s.hint}>
-            <strong>Template</strong> — edit the component, paste in snippets from the right panel, click <strong>Render preview →</strong>.{" "}
-            <strong>Preview template</strong> — the rendered email as it will be delivered.
+            <strong>Template</strong> — edit the component and paste in snippets from the right panel.{" "}
+            <strong>Preview template</strong> — renders the current code and shows the result.
             {customHtml && <>{" "}<strong style={{ color: "#625DF5" }}>Custom template active</strong> — your edited version will be sent in Step 4.</>}
           </p>
         </>
@@ -955,6 +967,30 @@ const localStyles: Record<string, React.CSSProperties> = {
     fontSize: 13,
     color: "#71717a",
     background: "#18181b",
+  },
+  previewErrorPane: {
+    height: 560,
+    display: "flex",
+    flexDirection: "column" as const,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    padding: "32px 40px",
+    background: "#18181b",
+    textAlign: "center" as const,
+  },
+  previewErrorMsg: {
+    fontSize: 12,
+    color: "#a1a1aa",
+    fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
+    lineHeight: 1.6,
+    maxWidth: 480,
+    wordBreak: "break-word" as const,
+  },
+  previewErrorHint: {
+    fontSize: 12,
+    color: "#52525b",
+    marginTop: 4,
   },
   templateBar: {
     padding: "10px 14px",
