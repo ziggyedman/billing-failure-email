@@ -936,9 +936,10 @@ const localStyles: Record<string, React.CSSProperties> = {
     fontFamily: "inherit",
   },
   viewerTabActive: {
-    background: "#ffffff",
-    color: "#18181b",
-    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+    background: "rgba(98,93,245,0.1)",
+    color: "#625DF5",
+    boxShadow: "0 0 0 1px rgba(98,93,245,0.35), 0 0 8px rgba(98,93,245,0.25)",
+    borderRadius: 5,
   },
   downloadBtn: {
     fontSize: 12,
