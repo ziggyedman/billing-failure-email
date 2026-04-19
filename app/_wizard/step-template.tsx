@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { stepStyles as s, CompletedBadge } from "./step-styles";
+import { stepStyles as s, CompletedBadge, NumberedSection } from "./step-styles";
 
 interface StepTemplateProps {
   customerName: string;
@@ -10,7 +10,8 @@ interface StepTemplateProps {
   alreadyCompleted: boolean;
 }
 
-type Tab = "preview" | "code";
+type MainTab = "try" | "learn";
+type ViewerTab = "preview" | "code";
 
 interface EmailValues {
   customerName: string;
@@ -68,11 +69,11 @@ await resend.emails.send({
 });`;
 }
 
-const FIELDS: { key: keyof EmailValues; label: string }[] = [
+const FIELDS: { key: keyof EmailValues; label: string; wide?: boolean }[] = [
   { key: "customerName",  label: "Customer name" },
   { key: "amount",        label: "Amount" },
   { key: "cardLast4",     label: "Card last 4" },
-  { key: "failureReason", label: "Failure reason" },
+  { key: "failureReason", label: "Failure reason", wide: true },
   { key: "nextRetryDate", label: "Next retry" },
   { key: "companyName",   label: "Company name" },
 ];
@@ -83,7 +84,8 @@ export function StepTemplate({
   onComplete,
   alreadyCompleted,
 }: StepTemplateProps) {
-  const [tab, setTab] = useState<Tab>("preview");
+  const [mainTab, setMainTab] = useState<MainTab>("try");
+  const [viewerTab, setViewerTab] = useState<ViewerTab>("preview");
   const [values, setValues] = useState<EmailValues>({ ...DEFAULTS, customerName });
   const [previewUrl, setPreviewUrl] = useState(() => buildPreviewUrl({ ...DEFAULTS, customerName }));
 
@@ -97,87 +99,168 @@ export function StepTemplate({
   }
 
   useEffect(() => {
-    if (tab === "preview") setPreviewUrl(buildPreviewUrl(values));
-  }, [tab]);
+    if (viewerTab === "preview") setPreviewUrl(buildPreviewUrl(values));
+  }, [viewerTab]);
 
   return (
     <div>
       {alreadyCompleted && <CompletedBadge />}
 
-      <p style={s.prose}>
-        The billing failure email is a <strong>React component</strong> built
-        with{" "}
-        <a href="https://react.email" target="_blank" rel="noreferrer" style={s.link}>
-          React Email
-        </a>
-        . Everything that varies per customer — name, amount, card, failure
-        reason — is passed as a prop. Edit the values below and hit{" "}
-        <strong>Apply</strong> to see the changes reflected in the preview and
-        the generated code.
-      </p>
+      {/* ── Main tab bar ── */}
+      <div style={localStyles.mainTabBar}>
+        <button
+          style={{ ...localStyles.mainTab, ...(mainTab === "try" ? localStyles.mainTabActive : {}) }}
+          onClick={() => setMainTab("try")}
+        >
+          Try it
+        </button>
+        <button
+          style={{ ...localStyles.mainTab, ...(mainTab === "learn" ? localStyles.mainTabActive : {}) }}
+          onClick={() => setMainTab("learn")}
+        >
+          How it's built
+        </button>
+      </div>
 
-      {/* template walkthrough */}
-      <h3 style={s.h3}>How the template is built</h3>
-      <p style={s.prose}>
-        The file <code style={s.inlineCode}>emails/billing-failure.tsx</code> is
-        a single React component. Here's what each section does:
-      </p>
+      {/* ══════════════ TRY IT ══════════════ */}
+      {mainTab === "try" && (
+        <>
+          <p style={s.prose}>
+            Edit the customer details below and click <strong>Apply</strong> to
+            re-render the email. Switch between <strong>Preview</strong> to see
+            it as the customer would, and <strong>Code</strong> to see the
+            send call with your values filled in.
+          </p>
 
-      <div style={localStyles.section}>
-        <div style={localStyles.sectionLabel}>1 · Preview text</div>
-        <div style={localStyles.sectionBody}>
-          <code style={s.inlineCode}>&lt;Preview&gt;</code> renders{" "}
-          <em>hidden</em> text that email clients show as the inbox snippet —
-          the line you see before opening a message. It's built from the amount
-          and product name so the customer immediately knows what happened
-          without opening the email.
-          <pre style={localStyles.mini}>{`<Preview>
+          {/* compact fields */}
+          <div style={localStyles.fieldGrid}>
+            {FIELDS.map(({ key, label, wide }) => (
+              <div key={key} style={{ ...localStyles.field, ...(wide ? localStyles.fieldWide : {}) }}>
+                <label style={localStyles.fieldLabel}>{label}</label>
+                <input
+                  style={localStyles.fieldInput}
+                  value={values[key]}
+                  onChange={(e) => set(key, e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && applyPreview()}
+                  spellCheck={false}
+                />
+              </div>
+            ))}
+            <div style={localStyles.applyRow}>
+              <button style={localStyles.applyBtn} onClick={applyPreview}>
+                Apply →
+              </button>
+              <span style={localStyles.applyHint}>or press Enter in any field</span>
+            </div>
+          </div>
+
+          {/* viewer */}
+          <div style={localStyles.viewer}>
+            <div style={localStyles.viewerBar}>
+              <div style={localStyles.viewerDots}>
+                <span style={localStyles.dot} />
+                <span style={localStyles.dot} />
+                <span style={localStyles.dot} />
+                <span style={localStyles.viewerTitle}>
+                  {viewerTab === "preview"
+                    ? "Your payment didn't go through"
+                    : "emails/billing-failure.tsx"}
+                </span>
+              </div>
+              <div style={localStyles.viewerTabs}>
+                <button
+                  style={{ ...localStyles.viewerTab, ...(viewerTab === "preview" ? localStyles.viewerTabActive : {}) }}
+                  onClick={() => setViewerTab("preview")}
+                >
+                  Preview
+                </button>
+                <button
+                  style={{ ...localStyles.viewerTab, ...(viewerTab === "code" ? localStyles.viewerTabActive : {}) }}
+                  onClick={() => setViewerTab("code")}
+                >
+                  Code
+                </button>
+                <a
+                  href="/api/source?file=email-template"
+                  download="billing-failure.tsx"
+                  style={localStyles.downloadBtn}
+                >
+                  ↓ Download
+                </a>
+              </div>
+            </div>
+
+            {viewerTab === "preview" && (
+              <iframe
+                key={previewUrl}
+                src={previewUrl}
+                style={localStyles.frame}
+                title="Email preview"
+              />
+            )}
+            {viewerTab === "code" && (
+              <pre style={localStyles.code}>{buildCodeSnippet(values)}</pre>
+            )}
+          </div>
+
+          <p style={s.hint}>
+            The preview is server-rendered using React Email's{" "}
+            <code>render()</code> — exactly what Resend delivers to the inbox.
+            Run <code>npm run email</code> locally for hot-reload.
+          </p>
+        </>
+      )}
+
+      {/* ══════════════ HOW IT'S BUILT ══════════════ */}
+      {mainTab === "learn" && (
+        <>
+          <p style={s.prose}>
+            The template lives at{" "}
+            <code style={s.inlineCode}>emails/billing-failure.tsx</code> — a
+            single React component. Every value that changes per customer is a
+            prop. Here's what each section of the email does:
+          </p>
+
+          <NumberedSection num={1} title="Preview text">
+            <code style={s.inlineCode}>&lt;Preview&gt;</code> renders{" "}
+            <em>hidden</em> text that email clients show as the inbox snippet —
+            the line you see before opening a message. It's built from the
+            amount and product name so the customer knows what happened without
+            opening the email.
+            <pre style={localStyles.mini}>{`<Preview>
   We couldn't process your payment of {currency} {amount}.
   Update your card to keep {productName} active.
 </Preview>`}</pre>
-        </div>
-      </div>
+          </NumberedSection>
 
-      <div style={localStyles.section}>
-        <div style={localStyles.sectionLabel}>2 · Logo / product name</div>
-        <div style={localStyles.sectionBody}>
-          A <code style={s.inlineCode}>&lt;Section&gt;</code> at the top
-          displays the product name as bold text. In a real deployment you'd
-          swap this for an <code style={s.inlineCode}>&lt;Img&gt;</code> tag
-          pointing to a hosted logo file.
-        </div>
-      </div>
+          <NumberedSection num={2} title="Logo / product name">
+            A <code style={s.inlineCode}>&lt;Section&gt;</code> at the top
+            displays the product name as bold text. In a real deployment you'd
+            swap this for an <code style={s.inlineCode}>&lt;Img&gt;</code> tag
+            pointing to a hosted logo file.
+          </NumberedSection>
 
-      <div style={localStyles.section}>
-        <div style={localStyles.sectionLabel}>3 · Alert banner</div>
-        <div style={localStyles.sectionBody}>
-          A red-tinted <code style={s.inlineCode}>&lt;Section&gt;</code> with a
-          warning icon and "Payment failed" text. It uses inline background and
-          border colors because email clients ignore external stylesheets — every
-          style in the template is written as an inline object for this reason.
-        </div>
-      </div>
+          <NumberedSection num={3} title="Alert banner">
+            A red-tinted <code style={s.inlineCode}>&lt;Section&gt;</code> with
+            a warning icon and "Payment failed" text. It uses inline background
+            and border colors because email clients ignore external stylesheets
+            — every style in the template is an inline object for this reason.
+          </NumberedSection>
 
-      <div style={localStyles.section}>
-        <div style={localStyles.sectionLabel}>4 · Greeting & opening paragraph</div>
-        <div style={localStyles.sectionBody}>
-          A <code style={s.inlineCode}>&lt;Heading&gt;</code> addresses the
-          customer by name, followed by a <code style={s.inlineCode}>&lt;Text&gt;</code>{" "}
-          paragraph that states which card was charged and which plan it was for.
-          Both pull directly from props so every email is personalised.
-        </div>
-      </div>
+          <NumberedSection num={4} title="Greeting & opening paragraph">
+            A <code style={s.inlineCode}>&lt;Heading&gt;</code> addresses the
+            customer by name, followed by a{" "}
+            <code style={s.inlineCode}>&lt;Text&gt;</code> paragraph that states
+            which card was charged and which plan it was for. Both pull directly
+            from props so every email is personalised.
+          </NumberedSection>
 
-      <div style={localStyles.section}>
-        <div style={localStyles.sectionLabel}>5 · Payment details box</div>
-        <div style={localStyles.sectionBody}>
-          A grey-background <code style={s.inlineCode}>&lt;Section&gt;</code>{" "}
-          shows four rows — Amount, Card, Reason, Next retry — separated by{" "}
-          <code style={s.inlineCode}>&lt;Hr&gt;</code> dividers. Each row uses
-          flexbox to push the label left and the value right. This gives the
-          customer all the facts they need to decide whether to update their card
-          or contact support.
-          <pre style={localStyles.mini}>{`<Section style={detailsBox}>
+          <NumberedSection num={5} title="Payment details box">
+            A grey-background <code style={s.inlineCode}>&lt;Section&gt;</code>{" "}
+            shows four rows — Amount, Card, Reason, Next retry — separated by{" "}
+            <code style={s.inlineCode}>&lt;Hr&gt;</code> dividers. Each row
+            uses flexbox to push the label left and the value right.
+            <pre style={localStyles.mini}>{`<Section style={detailsBox}>
   <Text>Amount    · {currency} {amount}</Text>
   <Hr />
   <Text>Card      · •••• {cardLast4}</Text>
@@ -186,133 +269,34 @@ export function StepTemplate({
   <Hr />
   <Text>Next retry · {nextRetryDate}</Text>
 </Section>`}</pre>
-        </div>
-      </div>
+          </NumberedSection>
 
-      <div style={localStyles.section}>
-        <div style={localStyles.sectionLabel}>6 · CTA button</div>
-        <div style={localStyles.sectionBody}>
-          <code style={s.inlineCode}>&lt;Button href=&#123;updatePaymentUrl&#125;&gt;</code>{" "}
-          is the primary action. React Email's{" "}
-          <code style={s.inlineCode}>&lt;Button&gt;</code> outputs an anchor tag
-          styled as a button — not an HTML{" "}
-          <code style={s.inlineCode}>&lt;button&gt;</code>, which many email
-          clients don't support. The URL is passed as a prop so each customer
-          can be sent to the right billing page.
-        </div>
-      </div>
+          <NumberedSection num={6} title="CTA button">
+            <code style={s.inlineCode}>&lt;Button href=&#123;updatePaymentUrl&#125;&gt;</code>{" "}
+            is the primary action. React Email's{" "}
+            <code style={s.inlineCode}>&lt;Button&gt;</code> outputs an anchor
+            tag styled as a button — not an HTML{" "}
+            <code style={s.inlineCode}>&lt;button&gt;</code>, which many email
+            clients don't support. The URL is a prop so each customer can be
+            sent to the right billing page.
+          </NumberedSection>
 
-      <div style={localStyles.section}>
-        <div style={localStyles.sectionLabel}>7 · Urgency paragraph</div>
-        <div style={localStyles.sectionBody}>
-          A short follow-up warning that if the retry also fails, the
-          subscription will be paused. This is placed after the button
-          deliberately — it reinforces urgency without blocking the CTA.
-        </div>
-      </div>
+          <NumberedSection num={7} title="Urgency paragraph">
+            A short warning that if the retry also fails, the subscription will
+            be paused. Placed after the button deliberately — it reinforces
+            urgency without blocking the CTA.
+          </NumberedSection>
 
-      <div style={localStyles.section}>
-        <div style={localStyles.sectionLabel}>8 · Support link & footer</div>
-        <div style={localStyles.sectionBody}>
-          An <code style={s.inlineCode}>&lt;Hr&gt;</code> divider separates the
-          main content from a smaller support line using{" "}
-          <code style={s.inlineCode}>&lt;Link&gt;</code>. Below that, a footer{" "}
-          <code style={s.inlineCode}>&lt;Text&gt;</code> shows the company name
-          and a one-line reason for receiving the email — required by
-          anti-spam best practices.
-        </div>
-      </div>
-
-      <h3 style={s.h3}>Try it — edit values and apply</h3>
-      <p style={s.prose}>
-        Edit any field below and click <strong>Apply</strong> (or press Enter)
-        to re-render the email with your values. Switch to{" "}
-        <strong>Code</strong> to see the send call with your values filled in.
-      </p>
-
-      {/* editable fields */}
-      <div style={localStyles.fieldGrid}>
-        {FIELDS.map(({ key, label }) => (
-          <div key={key} style={localStyles.fieldRow}>
-            <label style={localStyles.fieldLabel}>{label}</label>
-            <input
-              style={localStyles.fieldInput}
-              value={values[key]}
-              onChange={(e) => set(key, e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && applyPreview()}
-              spellCheck={false}
-            />
-          </div>
-        ))}
-        <div style={localStyles.fieldRow}>
-          <span />
-          <button style={localStyles.applyBtn} onClick={applyPreview}>
-            Apply →
-          </button>
-        </div>
-      </div>
-
-      {/* viewer */}
-      <div style={localStyles.viewer}>
-        <div style={localStyles.tabBar}>
-          <div style={localStyles.tabBarLeft}>
-            <span style={localStyles.dot} />
-            <span style={localStyles.dot} />
-            <span style={localStyles.dot} />
-            <span style={localStyles.barTitle}>
-              {tab === "preview"
-                ? "Your payment didn't go through"
-                : "emails/billing-failure.tsx"}
-            </span>
-          </div>
-          <div style={localStyles.tabs}>
-            <button
-              style={{ ...localStyles.tab, ...(tab === "preview" ? localStyles.tabActive : {}) }}
-              onClick={() => setTab("preview")}
-            >
-              Preview
-            </button>
-            <button
-              style={{ ...localStyles.tab, ...(tab === "code" ? localStyles.tabActive : {}) }}
-              onClick={() => setTab("code")}
-            >
-              Code
-            </button>
-            <a
-              href="/api/source?file=email-template"
-              download="billing-failure.tsx"
-              style={localStyles.downloadBtn}
-            >
-              ↓ Download
-            </a>
-          </div>
-        </div>
-
-        {tab === "preview" && (
-          <iframe
-            key={previewUrl}
-            src={previewUrl}
-            style={localStyles.frame}
-            title="Email preview"
-          />
-        )}
-
-        {tab === "code" && (
-          <div style={localStyles.codeWrap}>
-            <pre style={localStyles.code}>
-              <code>{buildCodeSnippet(values)}</code>
-            </pre>
-          </div>
-        )}
-      </div>
-
-      <p style={s.hint}>
-        The preview calls <code>/api/preview</code>, which renders the React
-        Email component server-side — the same output Resend delivers. The{" "}
-        <strong>Code</strong> tab shows the send call with your current values
-        filled in. Run <code>npm run email</code> locally for React Email's dev
-        server with hot reload.
-      </p>
+          <NumberedSection num={8} title="Support link & footer" last>
+            An <code style={s.inlineCode}>&lt;Hr&gt;</code> divider separates
+            the main content from a support line using{" "}
+            <code style={s.inlineCode}>&lt;Link&gt;</code>. Below that, a
+            footer <code style={s.inlineCode}>&lt;Text&gt;</code> shows the
+            company name and a one-line reason for receiving the email —
+            required by anti-spam best practices.
+          </NumberedSection>
+        </>
+      )}
 
       <div style={s.actionsRow}>
         <button style={s.primaryBtn} onClick={onComplete}>
@@ -324,99 +308,104 @@ export function StepTemplate({
 }
 
 const localStyles: Record<string, React.CSSProperties> = {
-  section: {
-    borderLeft: "3px solid #e5e7eb",
-    paddingLeft: 14,
-    marginBottom: 18,
+  mainTabBar: {
+    display: "flex",
+    gap: 2,
+    borderBottom: "1px solid #e4e4e7",
+    marginBottom: 24,
   },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: 700,
-    textTransform: "uppercase" as const,
-    letterSpacing: "0.5px",
-    color: "#6b7280",
-    marginBottom: 6,
+  mainTab: {
+    background: "transparent",
+    border: "none",
+    borderBottom: "2px solid transparent",
+    marginBottom: -1,
+    padding: "8px 16px",
+    fontSize: 13,
+    fontWeight: 500,
+    color: "#71717a",
+    cursor: "pointer",
+    fontFamily: "inherit",
+    transition: "color 120ms ease",
   },
-  sectionBody: {
-    fontSize: 14,
-    lineHeight: 1.65,
-    color: "#374151",
-  },
-  mini: {
-    background: "#0f172a",
-    color: "#e2e8f0",
-    fontSize: 12,
-    lineHeight: 1.55,
-    padding: "10px 14px",
-    borderRadius: 6,
-    marginTop: 10,
-    marginBottom: 0,
-    fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
-    whiteSpace: "pre" as const,
-    overflowX: "auto" as const,
+  mainTabActive: {
+    color: "#18181b",
+    borderBottomColor: "#18181b",
   },
   fieldGrid: {
     display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "10px 20px",
-    background: "#f9fafb",
-    border: "1px solid #e5e7eb",
+    gridTemplateColumns: "1fr 1fr 1fr",
+    gap: "10px 14px",
+    background: "#f4f4f5",
+    border: "1px solid #e4e4e7",
     borderRadius: 8,
-    padding: "16px 20px",
-    marginBottom: 16,
+    padding: "16px 18px",
+    marginBottom: 14,
   },
-  fieldRow: {
-    display: "grid",
-    gridTemplateColumns: "120px 1fr",
-    alignItems: "center",
-    gap: 8,
+  field: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: 4,
+  },
+  fieldWide: {
+    gridColumn: "span 2",
   },
   fieldLabel: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: 500,
-    color: "#6b7280",
-    whiteSpace: "nowrap",
+    color: "#71717a",
+    letterSpacing: "0.1px",
   },
   fieldInput: {
     fontSize: 13,
     padding: "5px 8px",
-    border: "1px solid #d1d5db",
+    border: "1px solid #e4e4e7",
     borderRadius: 5,
     fontFamily: "inherit",
     background: "#ffffff",
-    color: "#111827",
+    color: "#18181b",
     width: "100%",
     boxSizing: "border-box" as const,
+    outline: "none",
+  },
+  applyRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    gridColumn: "span 3",
+    paddingTop: 4,
   },
   applyBtn: {
     fontSize: 13,
     fontWeight: 600,
-    padding: "5px 14px",
-    background: "#111827",
+    padding: "6px 16px",
+    background: "#18181b",
     color: "#ffffff",
     border: "none",
-    borderRadius: 5,
+    borderRadius: 6,
     cursor: "pointer",
     fontFamily: "inherit",
-    justifySelf: "start",
+  },
+  applyHint: {
+    fontSize: 12,
+    color: "#a1a1aa",
   },
   viewer: {
-    border: "1px solid #e5e7eb",
+    border: "1px solid #e4e4e7",
     borderRadius: 8,
     overflow: "hidden",
-    margin: "0 0 8px",
-    background: "#f6f7f9",
+    marginBottom: 8,
+    background: "#fafafa",
   },
-  tabBar: {
-    background: "#f3f4f6",
-    borderBottom: "1px solid #e5e7eb",
+  viewerBar: {
+    background: "#f4f4f5",
+    borderBottom: "1px solid #e4e4e7",
     padding: "0 12px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
     minHeight: 40,
   },
-  tabBarLeft: {
+  viewerDots: {
     display: "flex",
     alignItems: "center",
     gap: 6,
@@ -425,41 +414,42 @@ const localStyles: Record<string, React.CSSProperties> = {
     width: 10,
     height: 10,
     borderRadius: "50%",
-    background: "#d1d5db",
+    background: "#d4d4d8",
     flexShrink: 0,
   },
-  barTitle: {
+  viewerTitle: {
     marginLeft: 10,
     fontSize: 12,
-    color: "#6b7280",
+    color: "#71717a",
     fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
   },
-  tabs: {
+  viewerTabs: {
     display: "flex",
     gap: 2,
+    alignItems: "center",
   },
-  tab: {
+  viewerTab: {
     background: "transparent",
     border: "none",
     borderRadius: 5,
     padding: "4px 12px",
     fontSize: 12,
     fontWeight: 500,
-    color: "#6b7280",
+    color: "#71717a",
     cursor: "pointer",
     fontFamily: "inherit",
   },
-  tabActive: {
+  viewerTabActive: {
     background: "#ffffff",
-    color: "#111827",
+    color: "#18181b",
     boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
   },
   downloadBtn: {
     fontSize: 12,
     fontWeight: 500,
-    color: "#374151",
+    color: "#3f3f46",
     textDecoration: "none",
-    border: "1px solid #d1d5db",
+    border: "1px solid #e4e4e7",
     borderRadius: 5,
     padding: "3px 10px",
     marginLeft: 6,
@@ -471,20 +461,32 @@ const localStyles: Record<string, React.CSSProperties> = {
     width: "100%",
     height: 560,
     border: "none",
-    background: "#f6f7f9",
+    background: "#fafafa",
     display: "block",
-  },
-  codeWrap: {
-    background: "#0f172a",
   },
   code: {
     margin: 0,
     padding: "20px 24px",
     fontSize: 12.5,
     lineHeight: 1.65,
-    color: "#e2e8f0",
+    color: "#e4e4e7",
+    background: "#18181b",
     fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
-    whiteSpace: "pre",
+    whiteSpace: "pre" as const,
     display: "block",
+    overflowX: "auto" as const,
+  },
+  mini: {
+    background: "#18181b",
+    color: "#e4e4e7",
+    fontSize: 12,
+    lineHeight: 1.55,
+    padding: "10px 14px",
+    borderRadius: 6,
+    marginTop: 10,
+    marginBottom: 0,
+    fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
+    whiteSpace: "pre" as const,
+    overflowX: "auto" as const,
   },
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { stepStyles as s, CompletedBadge } from "./step-styles";
+import { stepStyles as s, CompletedBadge, NumberedSection } from "./step-styles";
 
 interface StepDomainProps {
   fromEmail: string;
@@ -28,31 +28,36 @@ export function StepDomain({
       </p>
 
       <h3 style={s.h3}>How to verify your domain</h3>
-      <ol style={s.ol}>
-        <li style={s.li}>
-          In Resend go to{" "}
-          <a href="https://resend.com/domains" target="_blank" style={s.link}>
-            Domains → Add Domain
-          </a>
-          . Enter your domain and pick the region closest to your users.
-        </li>
-        <li style={s.li}>
-          Resend shows you the DNS records to add — typically an MX record for
-          bounces, a TXT for SPF, and TXT or CNAME records for DKIM. Leave that
-          tab open.
-        </li>
-        <li style={s.li}>
-          In your DNS provider (Namecheap, Cloudflare, etc.), add each record
-          exactly as shown. The <strong>Host</strong> is just the subdomain
-          part — if Resend shows{" "}
-          <code style={s.inlineCode}>send.yourdomain.com</code>, type just{" "}
-          <code style={s.inlineCode}>send</code>, not the full domain.
-        </li>
-        <li style={s.li}>
-          Click <strong>Verify DNS Records</strong> back on Resend. Propagation
-          usually takes a few minutes; some DNS providers take up to an hour.
-        </li>
-      </ol>
+
+      <NumberedSection num={1} title="Add your domain in Resend">
+        Go to{" "}
+        <a href="https://resend.com/domains" target="_blank" style={s.link}>
+          Domains → Add Domain
+        </a>
+        . Enter your domain and pick the region closest to your users.
+      </NumberedSection>
+
+      <NumberedSection num={2} title="Note the DNS records Resend gives you">
+        Resend shows the records to add — typically an MX record for bounces, a
+        TXT for SPF, and TXT or CNAME records for DKIM. Leave that tab open.
+      </NumberedSection>
+
+      <NumberedSection num={3} title="Add the records in your DNS provider">
+        In Namecheap, Cloudflare, or wherever your domain lives, add each record
+        exactly as shown. The <strong>Host</strong> field is just the subdomain
+        part — if Resend shows{" "}
+        <code style={s.inlineCode}>send.yourdomain.com</code>, type only{" "}
+        <code style={s.inlineCode}>send</code>, not the full domain.
+      </NumberedSection>
+
+      <NumberedSection num={4} title="Verify in Resend" last>
+        Click <strong>Verify DNS Records</strong> in Resend. Propagation usually
+        takes a few minutes; some providers take up to an hour.{" "}
+        <a href="https://dnschecker.org" target="_blank" style={s.link}>
+          dnschecker.org
+        </a>{" "}
+        lets you confirm what's live.
+      </NumberedSection>
 
       <div style={{ marginTop: 24 }}>
         <label style={s.label} htmlFor="fromEmail">
@@ -71,7 +76,7 @@ export function StepDomain({
         <p style={s.hint}>
           Must be on a domain you've verified in Resend. You can use any
           local-part (<code>billing@</code>, <code>noreply@</code>, etc.) —
-          Resend doesn't care which mailbox, just that the domain checks out.
+          Resend only checks that the domain checks out.
         </p>
       </div>
 

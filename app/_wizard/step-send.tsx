@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { stepStyles as s, CompletedBadge } from "./step-styles";
+import { stepStyles as s, CompletedBadge, NumberedSection } from "./step-styles";
 
 interface StepSendProps {
   apiKey: string;
@@ -31,6 +31,7 @@ export function StepSend({
   alreadyCompleted,
 }: StepSendProps) {
   const [status, setStatus] = useState<Status>({ kind: "idle" });
+  const [showCode, setShowCode] = useState(false);
 
   const allPriorComplete = completed.slice(0, 3).every(Boolean);
   const canSend =
@@ -68,103 +69,14 @@ export function StepSend({
       {alreadyCompleted && <CompletedBadge />}
 
       <p style={s.prose}>
-        Hitting <strong>Send</strong> at the bottom of this page fires a{" "}
-        <code style={s.inlineCode}>POST</code> to{" "}
-        <code style={s.inlineCode}>app/api/send-billing-failure/route.ts</code>{" "}
-        — a Next.js App Router route that calls the Resend SDK. Here's exactly
-        what that route does, step by step.
+        You're ready to send a real billing failure email. Enter the recipient
+        address below and click <strong>Send the email</strong>. The email will
+        be personalised with{" "}
+        <strong>{customerName || "the customer name"}</strong> from Step 3 and
+        sent from the address you verified in Step 2.
       </p>
-
-      {/* ── Route explanation ── */}
-      <div style={localStyles.section}>
-        <div style={localStyles.sectionNum}>1</div>
-        <div style={localStyles.sectionContent}>
-          <div style={localStyles.sectionTitle}>Parse the request & apply fallbacks</div>
-          <p style={localStyles.sectionProse}>
-            The route reads the JSON body sent by the browser. For each field it
-            prefers the value from the request, then falls back to environment
-            variables. This lets the app run in two modes: users supply their
-            own API key (tutorial mode), or the deployer pre-sets one via{" "}
-            <code style={s.inlineCode}>RESEND_API_KEY</code> (shared demo mode).
-          </p>
-          <pre style={localStyles.code}>{`const body   = await request.json();
-const apiKey = body.apiKey?.trim() || process.env.RESEND_API_KEY;
-const from   = body.from?.trim()   || process.env.FROM_EMAIL
-                                    || "onboarding@resend.dev";
-const to     = body.to?.trim();`}</pre>
-        </div>
-      </div>
-
-      <div style={localStyles.section}>
-        <div style={localStyles.sectionNum}>2</div>
-        <div style={localStyles.sectionContent}>
-          <div style={localStyles.sectionTitle}>Instantiate the Resend client</div>
-          <p style={localStyles.sectionProse}>
-            A new <code style={s.inlineCode}>Resend</code> instance is created
-            on every request using the resolved API key. There's no shared
-            singleton — each call gets its own authenticated client, which keeps
-            the code simple and stateless.
-          </p>
-          <pre style={localStyles.code}>{`const resend = new Resend(apiKey);`}</pre>
-        </div>
-      </div>
-
-      <div style={localStyles.section}>
-        <div style={localStyles.sectionNum}>3</div>
-        <div style={localStyles.sectionContent}>
-          <div style={localStyles.sectionTitle}>Send the email using the React Email template</div>
-          <p style={localStyles.sectionProse}>
-            This is where everything comes together. The{" "}
-            <code style={s.inlineCode}>react:</code> prop accepts the{" "}
-            <code style={s.inlineCode}>BillingFailureEmail</code> component
-            directly — the Resend SDK calls React Email's{" "}
-            <code style={s.inlineCode}>render()</code> internally to convert it
-            to HTML and auto-generates a plain-text fallback. You don't have to
-            write HTML or manage two versions of the content.
-          </p>
-          <pre style={localStyles.code}>{`const { data, error } = await resend.emails.send({
-  from,
-  to: [to],
-  subject: "Your payment didn't go through",
-  react: BillingFailureEmail({
-    customerName,
-    amount:           "29.00",
-    currency:         "USD",
-    cardLast4:        "4242",
-    failureReason:    "Card declined (insufficient_funds).",
-    nextRetryDate:    "in 3 days",
-    updatePaymentUrl: "https://example.com/billing",
-    supportUrl:       "https://example.com/support",
-  }),
-});`}</pre>
-        </div>
-      </div>
-
-      <div style={{ ...localStyles.section, marginBottom: 0 }}>
-        <div style={localStyles.sectionNum}>4</div>
-        <div style={localStyles.sectionContent}>
-          <div style={localStyles.sectionTitle}>Return the result</div>
-          <p style={localStyles.sectionProse}>
-            On success, Resend returns a message ID you can look up in the{" "}
-            <a href="https://resend.com/emails" target="_blank" style={s.link}>
-              Resend dashboard
-            </a>
-            . On failure, the error message tells you exactly what went wrong —
-            invalid key, unverified domain, rate limit, etc.
-          </p>
-          <pre style={localStyles.code}>{`if (error) return Response.json({ error }, { status: 500 });
-return Response.json(data); // { id: "msg_xxxxxxxxxxxx" }`}</pre>
-        </div>
-      </div>
 
       {/* ── Send form ── */}
-      <div style={localStyles.divider} />
-
-      <p style={s.prose}>
-        Fill in the recipient address and fire a real send. The email will use{" "}
-        <strong>{customerName || "the customer name"}</strong> set in Step 3.
-      </p>
-
       <div style={s.fieldGrid}>
         <div>
           <label style={s.label} htmlFor="from">From</label>
@@ -192,7 +104,7 @@ return Response.json(data); // { id: "msg_xxxxxxxxxxxx" }`}</pre>
           <p style={s.hint}>
             {!fromEmail || fromEmail === "onboarding@resend.dev"
               ? "Must be the email you signed up to Resend with (sandbox restriction)."
-              : "Any real address. Try delivered@resend.dev for a safe test inbox."}
+              : "Any real address. Try delivered@resend.dev for a safe test that won't land in a real inbox."}
           </p>
         </div>
       </div>
@@ -234,46 +146,112 @@ return Response.json(data); // { id: "msg_xxxxxxxxxxxx" }`}</pre>
           </span>
         </div>
       )}
+
+      {/* ── Collapsible technical detail ── */}
+      <div style={localStyles.divider} />
+
+      <button style={localStyles.toggleBtn} onClick={() => setShowCode((v) => !v)}>
+        <span style={localStyles.toggleIcon}>{showCode ? "▲" : "▼"}</span>
+        How it works under the hood
+      </button>
+
+      {showCode && (
+        <div style={localStyles.codeSection}>
+          <p style={s.prose}>
+            When you click Send, the browser packages your details and sends
+            them to a Next.js API route. That route uses the Resend SDK to
+            deliver the email. Here's each step:
+          </p>
+
+          <NumberedSection num={1} title="Your details are sent to an API route">
+            The app sends your API key, from address, recipient, and customer
+            name to{" "}
+            <code style={s.inlineCode}>
+              /api/send-billing-failure
+            </code>
+            . If the API key field is empty, the route falls back to the{" "}
+            <code style={s.inlineCode}>RESEND_API_KEY</code> environment
+            variable set on the server — so the app works in both tutorial mode
+            and shared-deploy mode.
+            <pre style={localStyles.code}>{`const body   = await request.json();
+const apiKey = body.apiKey?.trim() || process.env.RESEND_API_KEY;
+const from   = body.from?.trim()   || process.env.FROM_EMAIL
+                                    || "onboarding@resend.dev";
+const to     = body.to?.trim();`}</pre>
+          </NumberedSection>
+
+          <NumberedSection num={2} title="The route connects to Resend">
+            A Resend client is created using your API key. This is what
+            authenticates the request — Resend checks the key and routes the
+            email through your verified sending domain.
+            <pre style={localStyles.code}>{`const resend = new Resend(apiKey);`}</pre>
+          </NumberedSection>
+
+          <NumberedSection num={3} title="The email template is rendered and sent">
+            The billing failure email component from Step 3 is passed directly
+            to Resend's send method. Resend converts it to HTML automatically —
+            no manual rendering needed. The subject line, from, and to are set
+            here too.
+            <pre style={localStyles.code}>{`const { data, error } = await resend.emails.send({
+  from,
+  to: [to],
+  subject: "Your payment didn't go through",
+  react: BillingFailureEmail({
+    customerName,
+    amount:           "29.00",
+    currency:         "USD",
+    cardLast4:        "4242",
+    failureReason:    "Card declined (insufficient_funds).",
+    nextRetryDate:    "in 3 days",
+    updatePaymentUrl: "https://example.com/billing",
+    supportUrl:       "https://example.com/support",
+  }),
+});`}</pre>
+          </NumberedSection>
+
+          <NumberedSection num={4} title="You get a confirmation or an error" last>
+            If the send works, Resend returns a unique message ID you can track
+            in the{" "}
+            <a href="https://resend.com/emails" target="_blank" style={s.link}>
+              Resend dashboard
+            </a>
+            . If something goes wrong — wrong API key, unverified domain, rate
+            limit — the error message tells you exactly what to fix.
+            <pre style={localStyles.code}>{`if (error) return Response.json({ error }, { status: 500 });
+return Response.json(data); // { id: "msg_xxxxxxxxxxxx" }`}</pre>
+          </NumberedSection>
+        </div>
+      )}
     </div>
   );
 }
 
 const localStyles: Record<string, React.CSSProperties> = {
-  section: {
-    display: "flex",
-    gap: 16,
-    marginBottom: 28,
+  divider: {
+    borderTop: "1px solid #e4e4e7",
+    margin: "28px 0 20px",
   },
-  sectionNum: {
-    width: 24,
-    height: 24,
-    borderRadius: "50%",
-    background: "#18181b",
-    color: "#ffffff",
-    fontSize: 11,
-    fontWeight: 700,
+  toggleBtn: {
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
-    flexShrink: 0,
-    marginTop: 2,
-  },
-  sectionContent: {
-    flex: 1,
-    minWidth: 0,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: 600,
-    color: "#18181b",
-    marginBottom: 6,
-    letterSpacing: "-0.1px",
-  },
-  sectionProse: {
+    gap: 8,
+    background: "transparent",
+    border: "none",
+    padding: 0,
     fontSize: 13,
-    lineHeight: 1.7,
+    fontWeight: 600,
     color: "#3f3f46",
-    margin: "0 0 10px",
+    cursor: "pointer",
+    fontFamily: "inherit",
+    marginBottom: 20,
+  },
+  toggleIcon: {
+    fontSize: 10,
+    color: "#a1a1aa",
+  },
+  codeSection: {
+    borderLeft: "2px solid #e4e4e7",
+    paddingLeft: 20,
   },
   code: {
     background: "#18181b",
@@ -286,11 +264,7 @@ const localStyles: Record<string, React.CSSProperties> = {
     whiteSpace: "pre" as const,
     overflowX: "auto" as const,
     display: "block",
-    margin: 0,
+    margin: "10px 0 0",
     border: "1px solid #27272a",
-  },
-  divider: {
-    borderTop: "1px solid #e4e4e7",
-    margin: "32px 0",
   },
 };

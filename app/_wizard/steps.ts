@@ -30,7 +30,7 @@ export const STEPS: StepDef[] = [
   },
   {
     id: "send",
-    title: "The send route — then send it",
+    title: "Send the email",
     subtitle: "Inspect the API route that fires the email, then send a real one",
     duration: "~1 min",
     requiresInput: true, // requires actually sending

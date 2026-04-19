@@ -164,6 +164,64 @@ export const stepStyles: Record<string, React.CSSProperties> = {
   },
 };
 
+export const numberedStyles: Record<string, React.CSSProperties> = {
+  section: {
+    display: "flex",
+    gap: 16,
+    marginBottom: 24,
+  },
+  circle: {
+    width: 24,
+    height: 24,
+    borderRadius: "50%",
+    background: "#18181b",
+    color: "#ffffff",
+    fontSize: 11,
+    fontWeight: 700,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+    marginTop: 2,
+  },
+  content: {
+    flex: 1,
+    minWidth: 0,
+  },
+  title: {
+    fontSize: 14,
+    fontWeight: 600,
+    color: "#18181b",
+    marginBottom: 6,
+    letterSpacing: "-0.1px",
+  },
+  body: {
+    fontSize: 13,
+    lineHeight: 1.7,
+    color: "#3f3f46",
+    margin: 0,
+  },
+};
+
+interface NumberedSectionProps {
+  num: number;
+  title?: string;
+  last?: boolean;
+  children: React.ReactNode;
+}
+
+export function NumberedSection({ num, title, last, children }: NumberedSectionProps) {
+  return (
+    <div style={{ ...numberedStyles.section, marginBottom: last ? 0 : 24 }}>
+      <div style={numberedStyles.circle}>{num}</div>
+      <div style={numberedStyles.content}>
+        {title && <div style={numberedStyles.title}>{title}</div>}
+        <div style={numberedStyles.body}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
 export function CompletedBadge() {
   return (
     <div style={stepStyles.completedBanner}>
