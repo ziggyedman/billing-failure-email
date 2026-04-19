@@ -454,6 +454,58 @@ const BADGE_COLORS: Record<string, { bg: string; color: string }> = {
   content:  { bg: "#f0f9ff", color: "#075985" },
 };
 
+function CodeBlock({ code, compact = false }: { code: string; compact?: boolean }) {
+  const lines = code.split("\n");
+  const fs = compact ? 11.5 : 12.5;
+  const gutterW = compact ? 28 : 36;
+  const vPad = compact ? "10px" : "20px";
+  const hPad = compact ? "14px" : "24px";
+  return (
+    <div style={{
+      display: "flex",
+      overflowX: "auto" as const,
+      background: "#18181b",
+      borderRadius: compact ? 6 : 0,
+      marginTop: compact ? 10 : 0,
+      marginBottom: 0,
+    }}>
+      <div style={{
+        flexShrink: 0,
+        width: gutterW,
+        paddingTop: vPad,
+        paddingBottom: vPad,
+        paddingRight: 8,
+        textAlign: "right" as const,
+        color: "#52525b",
+        fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
+        fontSize: fs,
+        lineHeight: 1.65,
+        userSelect: "none" as const,
+        borderRight: "1px solid #27272a",
+      }}>
+        {lines.map((_, i) => <div key={i}>{i + 1}</div>)}
+      </div>
+      <pre style={{
+        margin: 0,
+        paddingTop: vPad,
+        paddingBottom: vPad,
+        paddingLeft: hPad,
+        paddingRight: hPad,
+        fontSize: fs,
+        lineHeight: 1.65,
+        color: "#e4e4e7",
+        background: "transparent",
+        fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
+        whiteSpace: "pre" as const,
+        flex: 1,
+        minWidth: 0,
+      }}>
+        {code}
+      </pre>
+    </div>
+  );
+}
+
 export function StepTemplate({
   customerName,
   onCustomerNameChange,
@@ -474,6 +526,14 @@ export function StepTemplate({
   const [customHtml, setCustomHtml] = useState<string | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const templateFetched = useRef(false);
+  const templateTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const lineNumsRef = useRef<HTMLDivElement>(null);
+
+  function syncScroll() {
+    if (templateTextareaRef.current && lineNumsRef.current) {
+      lineNumsRef.current.scrollTop = templateTextareaRef.current.scrollTop;
+    }
+  }
 
   function set(key: keyof EmailValues, val: string) {
     setValues((v) => ({ ...v, [key]: val }));
@@ -609,11 +669,11 @@ export function StepTemplate({
                 <button
                   style={{
                     ...localStyles.viewerTab,
-                    ...(viewerTab === "preview" ? localStyles.viewerTabActive : localStyles.viewerTabGlow),
+                    ...(viewerTab === "preview" ? localStyles.viewerTabActive : {}),
                   }}
                   onClick={() => setViewerTab("preview")}
                 >
-                  {customHtml ? "Preview ●" : "Preview"}
+                  {customHtml ? "Preview template ●" : "Preview template"}
                 </button>
                 <a
                   href="/api/source?file=email-template"
@@ -631,21 +691,30 @@ export function StepTemplate({
                 : <iframe key={previewUrl} src={previewUrl} style={localStyles.frame} title="Email preview" />
             )}
             {viewerTab === "code" && (
-              <pre style={localStyles.code}>{buildCodeSnippet(values)}</pre>
+              <CodeBlock code={buildCodeSnippet(values)} />
             )}
             {viewerTab === "template" && (
               <div style={{ position: "relative" as const }}>
                 {templateLoading ? (
                   <div style={localStyles.templateLoading}>Loading template…</div>
                 ) : (
-                  <textarea
-                    style={localStyles.templateTextarea}
-                    value={templateCode}
-                    onChange={(e) => setTemplateCode(e.target.value)}
-                    spellCheck={false}
-                    autoComplete="off"
-                    autoCorrect="off"
-                  />
+                  <div style={localStyles.templateEditorWrapper}>
+                    <div ref={lineNumsRef} style={localStyles.templateLineNums}>
+                      {templateCode.split("\n").map((_, i) => (
+                        <div key={i} style={localStyles.templateLineNum}>{i + 1}</div>
+                      ))}
+                    </div>
+                    <textarea
+                      ref={templateTextareaRef}
+                      style={localStyles.templateTextarea}
+                      value={templateCode}
+                      onChange={(e) => setTemplateCode(e.target.value)}
+                      onScroll={syncScroll}
+                      spellCheck={false}
+                      autoComplete="off"
+                      autoCorrect="off"
+                    />
+                  </div>
                 )}
                 <div style={localStyles.templateBar}>
                   {renderError && (
@@ -722,7 +791,7 @@ export function StepTemplate({
                       <p style={localStyles.componentWhen}>
                         <strong>When to use:</strong> {c.when}
                       </p>
-                      <pre style={localStyles.componentSnippet}>{c.snippet}</pre>
+                      <CodeBlock code={c.snippet} compact />
                     </>
                   )}
                 </div>
@@ -769,7 +838,7 @@ export function StepTemplate({
                 <p style={localStyles.componentWhen}>
                   <strong>When to use:</strong> {c.when}
                 </p>
-                <pre style={localStyles.mini}>{c.snippet}</pre>
+                <CodeBlock code={c.snippet} compact />
               </div>
             );
           })}
@@ -922,12 +991,6 @@ const localStyles: Record<string, React.CSSProperties> = {
     color: "#18181b",
     boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
   },
-  viewerTabGlow: {
-    background: "rgba(99,102,241,0.08)",
-    color: "#6366f1",
-    boxShadow: "0 0 0 1px rgba(99,102,241,0.3), 0 0 8px rgba(99,102,241,0.2)",
-    borderRadius: 5,
-  },
   downloadBtn: {
     fontSize: 12,
     fontWeight: 500,
@@ -948,36 +1011,33 @@ const localStyles: Record<string, React.CSSProperties> = {
     background: "#fafafa",
     display: "block",
   },
-  code: {
-    margin: 0,
-    padding: "20px 24px",
-    fontSize: 12.5,
-    lineHeight: 1.65,
-    color: "#e4e4e7",
-    background: "#18181b",
-    fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
-    whiteSpace: "pre" as const,
-    display: "block",
-    overflowX: "auto" as const,
-  },
-  mini: {
-    background: "#18181b",
-    color: "#e4e4e7",
-    fontSize: 12,
-    lineHeight: 1.55,
-    padding: "12px 16px",
-    borderRadius: 6,
-    marginTop: 10,
-    marginBottom: 0,
-    fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
-    whiteSpace: "pre" as const,
-    overflowX: "auto" as const,
-    display: "block",
-  },
   // Template editor
-  templateTextarea: {
-    width: "100%",
+  templateEditorWrapper: {
+    display: "flex",
     height: 560,
+    overflow: "hidden",
+    background: "#18181b",
+  },
+  templateLineNums: {
+    flexShrink: 0,
+    width: 36,
+    overflowY: "hidden" as const,
+    paddingTop: 16,
+    paddingBottom: 16,
+    paddingRight: 8,
+    textAlign: "right" as const,
+    color: "#52525b",
+    fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
+    fontSize: 12,
+    lineHeight: 1.65,
+    userSelect: "none" as const,
+    borderRight: "1px solid #27272a",
+  },
+  templateLineNum: {
+    lineHeight: 1.65,
+  },
+  templateTextarea: {
+    flex: 1,
     padding: "16px 20px",
     margin: 0,
     background: "#18181b",
@@ -991,6 +1051,7 @@ const localStyles: Record<string, React.CSSProperties> = {
     boxSizing: "border-box" as const,
     display: "block",
     tabSize: 2,
+    overflowY: "scroll" as const,
   },
   templateLoading: {
     height: 560,
@@ -1177,20 +1238,6 @@ const localStyles: Record<string, React.CSSProperties> = {
     color: "#16a34a",
     borderColor: "#bbf7d0",
     background: "#f0fdf4",
-  },
-  componentSnippet: {
-    background: "#18181b",
-    color: "#e4e4e7",
-    fontSize: 11.5,
-    lineHeight: 1.6,
-    padding: "12px 14px",
-    borderRadius: 6,
-    marginTop: 10,
-    marginBottom: 0,
-    fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
-    whiteSpace: "pre" as const,
-    overflowX: "auto" as const,
-    display: "block",
   },
   // How it's built tab
   learnCard: {
