@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { stepStyles as s, CompletedBadge, NumberedSection } from "./step-styles";
+import { FileCodeBlock } from "./code-block";
 
 interface StepSendProps {
   apiKey: string;
@@ -186,11 +187,11 @@ export function StepSend({
             back to environment variables if any are missing. So the app works
             whether the user pastes their own key in Step 1 or the deployer
             pre-sets one on the server.
-            <pre style={localStyles.code}>{`const body   = await request.json();
+            <FileCodeBlock filename="app/api/send-billing-failure/route.ts" code={`const body   = await request.json();
 const apiKey = body.apiKey?.trim() || process.env.RESEND_API_KEY;
 const from   = body.from?.trim()   || process.env.FROM_EMAIL
                                     || "onboarding@resend.dev";
-const to     = body.to?.trim();`}</pre>
+const to     = body.to?.trim();`} />
           </NumberedSection>
 
           <NumberedSection num={2} title="Authenticate with the Resend SDK">
@@ -198,9 +199,9 @@ const to     = body.to?.trim();`}</pre>
             authenticates the request. Resend verifies the key against your
             account and allows sending from your verified domain. A new client
             is created per request so there's no shared state between calls.
-            <pre style={localStyles.code}>{`import { Resend } from "resend";
+            <FileCodeBlock filename="app/api/send-billing-failure/route.ts" code={`import { Resend } from "resend";
 
-const resend = new Resend(apiKey);`}</pre>
+const resend = new Resend(apiKey);`} />
           </NumberedSection>
 
           <NumberedSection num={3} title="Render the email template and send">
@@ -211,7 +212,7 @@ const resend = new Resend(apiKey);`}</pre>
             converting the component to HTML and generating a plain-text
             fallback automatically. The customer details (name, amount, card,
             reason, retry date) are injected at send time.
-            <pre style={localStyles.code}>{`import BillingFailureEmail from "@/emails/billing-failure";
+            <FileCodeBlock filename="app/api/send-billing-failure/route.ts" code={`import BillingFailureEmail from "@/emails/billing-failure";
 
 const { data, error } = await resend.emails.send({
   from,
@@ -227,7 +228,7 @@ const { data, error } = await resend.emails.send({
     updatePaymentUrl: "https://example.com/billing",
     supportUrl:       "https://example.com/support",
   }),
-});`}</pre>
+});`} />
           </NumberedSection>
 
           <NumberedSection num={4} title="Handle the response">
@@ -236,9 +237,9 @@ const { data, error } = await resend.emails.send({
             If anything goes wrong. Wrong API key, unverified domain, invalid
             recipient, rate limit. The error message from Resend is surfaced
             directly so you know exactly what to fix.
-            <pre style={localStyles.code}>{`if (error) return Response.json({ error }, { status: 500 });
+            <FileCodeBlock filename="app/api/send-billing-failure/route.ts" code={`if (error) return Response.json({ error }, { status: 500 });
 return Response.json(data);
-// success: { id: "msg_xxxxxxxxxxxx" }`}</pre>
+// success: { id: "msg_xxxxxxxxxxxx" }`} />
           </NumberedSection>
 
           <NumberedSection num={5} title="Track the send in Resend" last>
@@ -281,19 +282,5 @@ const localStyles: Record<string, React.CSSProperties> = {
   mainTabActive: {
     color: "#18181b",
     borderBottomColor: "#18181b",
-  },
-  code: {
-    background: "#18181b",
-    color: "#e4e4e7",
-    padding: "14px 16px",
-    borderRadius: 7,
-    fontSize: 12,
-    lineHeight: 1.65,
-    fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
-    whiteSpace: "pre" as const,
-    overflowX: "auto" as const,
-    display: "block",
-    margin: "10px 0 0",
-    border: "1px solid #27272a",
   },
 };

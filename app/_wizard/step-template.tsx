@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { stepStyles as s, CompletedBadge } from "./step-styles";
+import { CodeBlock } from "./code-block";
 
 interface StepTemplateProps {
   customerName: string;
@@ -453,58 +454,6 @@ const BADGE_COLORS: Record<string, { bg: string; color: string }> = {
   style:    { bg: "#fff7ed", color: "#9a3412" },
   content:  { bg: "#f0f9ff", color: "#075985" },
 };
-
-function CodeBlock({ code, compact = false }: { code: string; compact?: boolean }) {
-  const lines = code.split("\n");
-  const fs = compact ? 11.5 : 12.5;
-  const gutterW = compact ? 28 : 36;
-  const vPad = compact ? "10px" : "20px";
-  const hPad = compact ? "14px" : "24px";
-  return (
-    <div style={{
-      display: "flex",
-      overflowX: "auto" as const,
-      background: "#18181b",
-      borderRadius: compact ? 6 : 0,
-      marginTop: compact ? 10 : 0,
-      marginBottom: 0,
-    }}>
-      <div style={{
-        flexShrink: 0,
-        width: gutterW,
-        paddingTop: vPad,
-        paddingBottom: vPad,
-        paddingRight: 8,
-        textAlign: "right" as const,
-        color: "#52525b",
-        fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
-        fontSize: fs,
-        lineHeight: 1.65,
-        userSelect: "none" as const,
-        borderRight: "1px solid #27272a",
-      }}>
-        {lines.map((_, i) => <div key={i}>{i + 1}</div>)}
-      </div>
-      <pre style={{
-        margin: 0,
-        paddingTop: vPad,
-        paddingBottom: vPad,
-        paddingLeft: hPad,
-        paddingRight: hPad,
-        fontSize: fs,
-        lineHeight: 1.65,
-        color: "#e4e4e7",
-        background: "transparent",
-        fontFamily: "'SF Mono', Monaco, Menlo, Consolas, monospace",
-        whiteSpace: "pre" as const,
-        flex: 1,
-        minWidth: 0,
-      }}>
-        {code}
-      </pre>
-    </div>
-  );
-}
 
 export function StepTemplate({
   customerName,
