@@ -669,19 +669,15 @@ export function StepTemplate({
             <strong>Preview</strong> — the rendered email, exactly what Resend delivers to the inbox.
           </p>
 
-        </>
-      )}
-
-      {/* ══════════════ HOW IT'S BUILT ══════════════ */}
-      {mainTab === "learn" && (
-        <>
-          <p style={s.prose}>
-            Every component below is from{" "}
-            <code style={s.inlineCode}>@react-email/components</code>. Copy
-            any snippet, paste it into the <strong>Template</strong> tab in
-            Try it, and click <strong>Render preview →</strong> to see the
-            change live.
-          </p>
+          {/* ── Component library ── */}
+          <div style={localStyles.componentLibraryHeader}>
+            <div>
+              <div style={localStyles.componentLibraryTitle}>React Email component library</div>
+              <div style={localStyles.componentLibrarySubtitle}>
+                Every component available to build or extend your template. Download the template and add these to customize it fully.
+              </div>
+            </div>
+          </div>
 
           <div style={localStyles.componentGrid}>
             {COMPONENTS.map((c) => {
@@ -733,6 +729,50 @@ export function StepTemplate({
               );
             })}
           </div>
+        </>
+      )}
+
+      {/* ══════════════ HOW IT'S BUILT ══════════════ */}
+      {mainTab === "learn" && (
+        <>
+          <p style={s.prose}>
+            React Email provides a set of components that abstract away the quirks of
+            email HTML. Tables for layout, inline styles everywhere, absolute image
+            URLs. Each component below is available in{" "}
+            <code style={s.inlineCode}>@react-email/components</code>. Here's what
+            each one does, why it exists, and when to reach for it.
+          </p>
+
+          {COMPONENTS.map((c, i) => {
+            const isCopied = copied === `learn-${c.name}`;
+            const badgeStyle = BADGE_COLORS[c.badge] ?? BADGE_COLORS.text;
+            return (
+              <div
+                key={c.name}
+                style={{ ...localStyles.learnCard, ...(i === COMPONENTS.length - 1 ? { marginBottom: 0 } : {}) }}
+              >
+                <div style={localStyles.learnCardHeader}>
+                  <div style={localStyles.learnCardLeft}>
+                    <code style={localStyles.learnTag}>{c.tag}</code>
+                    <span style={{ ...localStyles.componentBadge, background: badgeStyle.bg, color: badgeStyle.color }}>
+                      {c.badge}
+                    </span>
+                  </div>
+                  <button
+                    style={{ ...localStyles.componentCopyBtn, ...(isCopied ? localStyles.componentCopyBtnDone : {}) }}
+                    onClick={() => copy(`learn-${c.name}`, c.snippet)}
+                  >
+                    {isCopied ? "Copied!" : "Copy snippet"}
+                  </button>
+                </div>
+                <p style={localStyles.learnDesc}>{c.description}</p>
+                <p style={localStyles.componentWhen}>
+                  <strong>When to use:</strong> {c.when}
+                </p>
+                <pre style={localStyles.mini}>{c.snippet}</pre>
+              </div>
+            );
+          })}
         </>
       )}
 
