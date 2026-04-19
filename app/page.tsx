@@ -267,9 +267,11 @@ export default function Home() {
                       toEmail={state.toEmail}
                       customerName={state.customerName}
                       customTemplateHtml={state.customTemplateHtml}
+                      customTemplateCode={state.customTemplateCode}
                       completed={state.completed}
                       onToEmailChange={(v) => update("toEmail", v)}
                       onCustomerNameChange={(v) => update("customerName", v)}
+                      onCustomHtmlChange={(html) => update("customTemplateHtml", html)}
                       onComplete={() => markComplete(3)}
                       alreadyCompleted={state.completed[3]}
                     />

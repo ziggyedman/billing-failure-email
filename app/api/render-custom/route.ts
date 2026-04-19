@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   try {
-    const { code } = await req.json();
+    const { code, props: userProps } = await req.json();
     if (!code || typeof code !== "string") {
       return Response.json({ error: "No code provided." }, { status: 400 });
     }
@@ -47,17 +47,17 @@ export async function POST(req: Request) {
     }
 
     const props = {
-      customerName: "Alex",
+      customerName:  userProps?.customerName  ?? "Alex",
+      amount:        userProps?.amount        ?? "29.00",
+      cardLast4:     userProps?.cardLast4     ?? "4242",
+      failureReason: userProps?.failureReason ?? "Your card was declined (insufficient_funds).",
+      nextRetryDate: userProps?.nextRetryDate ?? "in 3 days",
+      companyName:   userProps?.companyName   ?? "Acme, Inc.",
       productName: "Acme",
       planName: "Pro",
-      amount: "29.00",
       currency: "USD",
-      cardLast4: "4242",
-      failureReason: "Your card was declined (insufficient_funds).",
-      nextRetryDate: "in 3 days",
       updatePaymentUrl: "https://example.com/billing",
       supportUrl: "https://example.com/support",
-      companyName: "Acme, Inc.",
     };
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const html = await render(React.createElement(Component as any, props));

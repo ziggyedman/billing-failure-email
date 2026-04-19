@@ -63,9 +63,11 @@ interface StepSendProps {
   toEmail: string;
   customerName: string;
   customTemplateHtml: string;
+  customTemplateCode: string;
   completed: boolean[];
   onToEmailChange: (v: string) => void;
   onCustomerNameChange: (v: string) => void;
+  onCustomHtmlChange: (html: string) => void;
   onComplete: () => void;
   alreadyCompleted: boolean;
 }
@@ -84,9 +86,11 @@ export function StepSend({
   toEmail,
   customerName,
   customTemplateHtml,
+  customTemplateCode,
   completed,
   onToEmailChange,
   onCustomerNameChange,
+  onCustomHtmlChange,
   onComplete,
   alreadyCompleted,
 }: StepSendProps) {
@@ -94,13 +98,28 @@ export function StepSend({
   const [mainTab, setMainTab] = useState<MainTab>("send");
   const [sourceLines, setSourceLines] = useState<string[]>([]);
   const [values, setValues] = useState<EmailValues>({ ...DEFAULTS, customerName });
+  const [rerendering, setRerendering] = useState(false);
 
   function setField(key: keyof EmailValues, val: string) {
     setValues((v) => ({ ...v, [key]: val }));
   }
 
-  function applyValues() {
+  async function applyValues() {
     onCustomerNameChange(values.customerName);
+    if (customTemplateHtml && customTemplateCode) {
+      setRerendering(true);
+      try {
+        const res = await fetch("/api/render-custom", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: customTemplateCode, props: values }),
+        });
+        const json = await res.json();
+        if (!json.error) onCustomHtmlChange(json.html);
+      } finally {
+        setRerendering(false);
+      }
+    }
   }
 
   useEffect(() => {
@@ -178,8 +197,9 @@ export function StepSend({
         <>
           {/* ── Customer details + code snippet ── */}
           <p style={s.prose}>
-            Edit the customer details and click <strong>Apply</strong> to update the send call below.
-            These values are injected into the email when no custom template is active.
+            Edit the customer details and click <strong>Apply</strong>.
+            If a custom template is active from Step 3, Apply re-renders it with the new values.
+            Otherwise the values are injected directly into the default template at send time.
           </p>
 
           <div style={localStyles.fieldGrid}>
@@ -196,8 +216,18 @@ export function StepSend({
               </div>
             ))}
             <div style={localStyles.applyRow}>
-              <button style={localStyles.applyBtn} onClick={applyValues}>Apply →</button>
-              <span style={localStyles.applyHint}>or press Enter in any field</span>
+              <button
+                style={rerendering ? { ...localStyles.applyBtn, opacity: 0.5, cursor: "not-allowed" } : localStyles.applyBtn}
+                onClick={applyValues}
+                disabled={rerendering}
+              >
+                {rerendering ? "Re-rendering…" : "Apply →"}
+              </button>
+              <span style={localStyles.applyHint}>
+                {customTemplateHtml
+                  ? "Re-renders your custom template with the updated values."
+                  : "Updates the send call below."}
+              </span>
             </div>
           </div>
 
