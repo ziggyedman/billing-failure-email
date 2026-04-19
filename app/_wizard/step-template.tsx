@@ -85,7 +85,7 @@ export function StepTemplate({
   alreadyCompleted,
 }: StepTemplateProps) {
   const [mainTab, setMainTab] = useState<MainTab>("try");
-  const [viewerTab, setViewerTab] = useState<ViewerTab>("preview");
+  const [viewerTab, setViewerTab] = useState<ViewerTab>("code");
   const [values, setValues] = useState<EmailValues>({ ...DEFAULTS, customerName });
   const [previewUrl, setPreviewUrl] = useState(() => buildPreviewUrl({ ...DEFAULTS, customerName }));
 
@@ -127,8 +127,8 @@ export function StepTemplate({
         <>
           <p style={s.prose}>
             Edit the customer details below and click <strong>Apply</strong> to
-            re-render the email. Switch between <strong>Preview</strong> to see
-            it as the customer would, and <strong>Code</strong> to see the
+            re-render the email. Switch to <strong>Preview</strong> to see it
+            as the customer would, or stay on <strong>Code</strong> to see the
             send call with your values filled in.
           </p>
 
@@ -169,16 +169,19 @@ export function StepTemplate({
               </div>
               <div style={localStyles.viewerTabs}>
                 <button
-                  style={{ ...localStyles.viewerTab, ...(viewerTab === "preview" ? localStyles.viewerTabActive : {}) }}
-                  onClick={() => setViewerTab("preview")}
-                >
-                  Preview
-                </button>
-                <button
                   style={{ ...localStyles.viewerTab, ...(viewerTab === "code" ? localStyles.viewerTabActive : {}) }}
                   onClick={() => setViewerTab("code")}
                 >
                   Code
+                </button>
+                <button
+                  style={{
+                    ...localStyles.viewerTab,
+                    ...(viewerTab === "preview" ? localStyles.viewerTabActive : localStyles.viewerTabGlow),
+                  }}
+                  onClick={() => setViewerTab("preview")}
+                >
+                  Preview
                 </button>
                 <a
                   href="/api/source?file=email-template"
@@ -443,6 +446,13 @@ const localStyles: Record<string, React.CSSProperties> = {
     background: "#ffffff",
     color: "#18181b",
     boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+  },
+  viewerTabGlow: {
+    background: "rgba(99,102,241,0.08)",
+    color: "#6366f1",
+    boxShadow: "0 0 0 1px rgba(99,102,241,0.3), 0 0 8px rgba(99,102,241,0.2)",
+    borderRadius: 5,
+    animation: "none",
   },
   downloadBtn: {
     fontSize: 12,

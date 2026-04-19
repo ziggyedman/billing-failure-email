@@ -93,9 +93,7 @@ export function StepSend({
             Enter a recipient address and click <strong>Send the email</strong>.
             The app will use your API key from Step 1 to authenticate with
             Resend, send from the address you verified in Step 2, and deliver
-            the billing failure email with{" "}
-            <strong>{customerName || "the customer name"}</strong> and the
-            details you set in Step 3.
+            the billing failure email with the details you set in Step 3.
           </p>
 
           <div style={s.fieldGrid}>
