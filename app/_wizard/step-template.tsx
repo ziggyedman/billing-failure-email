@@ -37,6 +37,8 @@ interface ComponentEntry {
   badge: string;
   description: string;
   when: string;
+  pasteHint: string;
+  needsImport: boolean; // true = not in the template yet, user must add to import
   snippet: string;
 }
 
@@ -45,22 +47,34 @@ const COMPONENTS: ComponentEntry[] = [
     name: "Html",
     tag: "<Html>",
     badge: "root",
+    needsImport: false,
     description: "The outermost wrapper for every React Email template. Sets the lang and dir attributes and outputs the <!DOCTYPE html> declaration.",
     when: "Always — every template must have exactly one Html as the root.",
-    snippet: `import { Html } from "@react-email/components";
+    pasteHint: "Already the root of the template. Change the lang/dir attributes directly on line 46.",
+    snippet: `// Already imported ✓
+// import { Html } from "@react-email/components";
 
+// Edit the existing <Html> tag at line 46:
 <Html lang="en" dir="ltr">
-  {/* Head, Preview, Body all go here */}
+  <Head />
+  <Preview>{previewText}</Preview>
+  <Body style={main}>
+    ...
+  </Body>
 </Html>`,
   },
   {
     name: "Head",
     tag: "<Head>",
     badge: "metadata",
+    needsImport: false,
     description: "Holds email metadata, @font-face declarations, and @media query style blocks. Renders as <head> in the final HTML.",
     when: "When you need custom fonts (via <Font>) or mobile-responsive @media overrides. Most email styling is inline — Head is for the exceptions.",
-    snippet: `import { Head } from "@react-email/components";
+    pasteHint: "Replace the self-closing <Head /> on line 48 with an opening/closing pair and add content inside.",
+    snippet: `// Already imported ✓
+// import { Head } from "@react-email/components";
 
+// Replace <Head /> on line 48 with:
 <Head>
   <style>{\`
     @media (max-width: 600px) {
@@ -73,80 +87,105 @@ const COMPONENTS: ComponentEntry[] = [
     name: "Preview",
     tag: "<Preview>",
     badge: "inbox",
+    needsImport: false,
     description: "Hidden text that email clients display as the inbox snippet — the line visible before opening a message. Never appears in the email body itself.",
     when: "Always include it. It's one of the most impactful conversion levers in email. Keep it under 90 characters or it gets cut off.",
-    snippet: `import { Preview } from "@react-email/components";
+    pasteHint: "Already in the template on line 49. Edit the previewText variable near line 43 to change its content.",
+    snippet: `// Already imported ✓
+// import { Preview } from "@react-email/components";
 
-<Preview>
-  We couldn't process your $29.00 payment.
-  Update your card to keep Pro active.
-</Preview>`,
+// Edit the previewText variable near line 43:
+const previewText = \`We couldn't process your \${currency} \${amount}. Update your card.\`;
+
+// The <Preview> at line 49 uses it:
+<Preview>{previewText}</Preview>`,
   },
   {
     name: "Body",
     tag: "<Body>",
     badge: "layout",
+    needsImport: false,
     description: "Sets the background color and base font for the entire email. Equivalent to the <body> tag — wraps everything the recipient sees.",
     when: "Always — place it directly inside Html, wrapping Container.",
-    snippet: `import { Body } from "@react-email/components";
+    pasteHint: "Already in the template on line 50. Edit the `main` style object near the bottom of the file to change background color or font.",
+    snippet: `// Already imported ✓
+// import { Body } from "@react-email/components";
 
-<Body style={{
-  backgroundColor: "#f4f4f5",
-  fontFamily: "'Inter', Arial, sans-serif",
-  margin: 0,
-  padding: 0,
-}}>
-  {/* Container goes here */}
-</Body>`,
+// Edit the existing <Body> on line 50,
+// or update the \`main\` style object at the bottom of the file:
+const main: React.CSSProperties = {
+  backgroundColor: "#f0f4ff", // change the background color
+  fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+};`,
   },
   {
     name: "Container",
     tag: "<Container>",
     badge: "layout",
+    needsImport: false,
     description: "Centers content and caps its width. The primary layout wrapper inside Body. Renders as a centered table for Outlook compatibility.",
     when: "Always — set maxWidth between 560–600px. Wider emails don't render well in preview panes and mobile clients.",
-    snippet: `import { Container } from "@react-email/components";
+    pasteHint: "Already in the template on line 51. Edit the `container` style object at the bottom of the file to change width, background, or border.",
+    snippet: `// Already imported ✓
+// import { Container } from "@react-email/components";
 
-<Container style={{
-  maxWidth: 600,
-  margin: "0 auto",
+// Edit the \`container\` style object at the bottom of the file:
+const container: React.CSSProperties = {
   backgroundColor: "#ffffff",
-  borderRadius: 8,
-}}>
-  {/* Sections go here */}
-</Container>`,
+  margin: "0 auto",
+  padding: "32px 40px",
+  maxWidth: "560px",   // increase to 600px for wider emails
+  borderRadius: "8px",
+  border: "1px solid #e5e7eb",
+};`,
   },
   {
     name: "Section",
     tag: "<Section>",
     badge: "layout",
+    needsImport: false,
     description: "A block-level container. Renders as a <table> row internally to ensure Outlook compatibility. Use it anywhere you'd use a <div> on the web.",
     when: "For any distinct region: header, alert banner, content area, footer, colored band, or padding zone.",
-    snippet: `import { Section } from "@react-email/components";
+    pasteHint: "Paste inside <Container> (between lines 51 and 121). Used for the logo, alert banner, details box, and button sections already.",
+    snippet: `// Already imported ✓
+// import { Section } from "@react-email/components";
 
-// Alert banner example
+// Paste inside <Container>, e.g. after the alertBanner Section (~line 57):
 <Section style={{
   padding: "16px 24px",
-  backgroundColor: "#fef2f2",
-  borderLeft: "4px solid #ef4444",
+  backgroundColor: "#fffbeb",
+  borderLeft: "4px solid #f59e0b",
+  marginBottom: "24px",
 }}>
-  <Text>⚠ Payment failed</Text>
+  <Text style={{ margin: 0, color: "#92400e", fontSize: 14 }}>
+    ⏱ This offer expires in 48 hours.
+  </Text>
 </Section>`,
   },
   {
     name: "Row / Column",
     tag: "<Row> + <Column>",
     badge: "layout",
+    needsImport: true,
     description: "Multi-column layouts. Row is the grid container; Column is each cell. Renders as table-based layout for cross-client compatibility including Outlook.",
     when: "Two-column layouts: content + sidebar, logo + nav, icon + text. Use percentage widths on Column — they're the most reliable unit across email clients.",
-    snippet: `import { Row, Column } from "@react-email/components";
+    pasteHint: "Add Row, Column to the import on line 1. Then paste inside <Container> or inside a <Section>.",
+    snippet: `// 1. Add to the import on line 1:
+import {
+  Body, Button, Container, Head, Heading, Hr, Html,
+  Link, Preview, Row, Column, Section, Text, // ← add Row, Column
+} from "@react-email/components";
 
+// 2. Paste inside <Container>, e.g. after the logoSection (~line 53):
 <Row>
   <Column style={{ width: "60%", paddingRight: 16 }}>
-    <Text>Main content on the left</Text>
+    <Text style={{ margin: 0, fontWeight: 600 }}>Account status</Text>
+    <Text style={{ margin: 0, color: "#6b7280" }}>Payment past due</Text>
   </Column>
-  <Column style={{ width: "40%" }}>
-    <Text>Sidebar on the right</Text>
+  <Column style={{ width: "40%", textAlign: "right" }}>
+    <Text style={{ margin: 0, fontWeight: 700, color: "#ef4444" }}>
+      USD {amount}
+    </Text>
   </Column>
 </Row>`,
   },
@@ -154,120 +193,167 @@ const COMPONENTS: ComponentEntry[] = [
     name: "Heading",
     tag: "<Heading>",
     badge: "text",
+    needsImport: false,
     description: "Renders h1–h6 headings. Use it over a styled <Text> when the content is semantically a heading — it outputs the correct HTML element, which matters for accessibility.",
     when: "Email titles, section headers, and any text that functions as a heading. The as prop accepts 'h1' through 'h6'.",
-    snippet: `import { Heading } from "@react-email/components";
+    pasteHint: "Already in the template on line 59. Add another <Heading> inside <Container> to create a sub-section header.",
+    snippet: `// Already imported ✓
+// import { Heading } from "@react-email/components";
 
+// Add a sub-section heading inside <Container>, e.g. before the detailsBox:
 <Heading
-  as="h2"
+  as="h3"
   style={{
-    fontSize: 22,
-    fontWeight: 700,
-    color: "#18181b",
-    margin: "0 0 12px",
-    letterSpacing: "-0.3px",
+    fontSize: 14,
+    fontWeight: 600,
+    color: "#6b7280",
+    margin: "0 0 8px",
+    textTransform: "uppercase",
+    letterSpacing: "0.05em",
   }}
 >
-  Hi {customerName}, action required
+  Payment details
 </Heading>`,
   },
   {
     name: "Text",
     tag: "<Text>",
     badge: "text",
+    needsImport: false,
     description: "Paragraph text. Renders as a <p> tag with safe default resets that prevent email clients from adding unexpected margins.",
     when: "Every prose block — body copy, labels, detail rows, footers. The most-used component. Avoid raw <p> tags; use Text instead.",
-    snippet: `import { Text } from "@react-email/components";
+    pasteHint: "Already used throughout the template. Add a new <Text> inside <Container> anywhere you need a paragraph.",
+    snippet: `// Already imported ✓
+// import { Text } from "@react-email/components";
 
+// Add inside <Container>, e.g. after the button Section (~line 100):
 <Text style={{
-  fontSize: 14,
-  color: "#3f3f46",
-  lineHeight: "1.75",
-  margin: "0 0 16px",
+  fontSize: 13,
+  color: "#9ca3af",
+  lineHeight: "20px",
+  margin: "0 0 12px",
+  textAlign: "center",
 }}>
-  Hi {customerName}, we tried to charge ••••{cardLast4}
-  but the payment didn't go through.
+  You have until {nextRetryDate} before your account is paused.
 </Text>`,
   },
   {
     name: "Button",
     tag: "<Button>",
     badge: "action",
+    needsImport: false,
     description: "A CTA rendered as an anchor tag styled to look like a button. Email clients don't reliably support HTML <button> — Button outputs an <a> that works everywhere.",
     when: "Primary calls to action: 'Update payment method', 'View invoice', 'Reactivate subscription'. Always provide an href — the button is meaningless without a destination.",
-    snippet: `import { Button } from "@react-email/components";
+    pasteHint: "Already in the template inside buttonContainer (~line 97). Add a secondary button in a new Section below it.",
+    snippet: `// Already imported ✓
+// import { Button } from "@react-email/components";
 
-<Button
-  href={updatePaymentUrl}
-  style={{
-    backgroundColor: "#18181b",
-    color: "#ffffff",
-    padding: "12px 28px",
-    borderRadius: 6,
-    fontSize: 14,
-    fontWeight: 600,
-    display: "block",
-    textAlign: "center",
-  }}
->
-  Update payment method
-</Button>`,
+// Add a secondary CTA after the existing button Section (~line 100):
+<Section style={{ textAlign: "center", marginTop: 12 }}>
+  <Button
+    href={supportUrl}
+    style={{
+      backgroundColor: "transparent",
+      color: "#6b7280",
+      padding: "8px 20px",
+      borderRadius: 6,
+      fontSize: 13,
+      border: "1px solid #e5e7eb",
+      display: "inline-block",
+    }}
+  >
+    Contact support instead
+  </Button>
+</Section>`,
   },
   {
     name: "Link",
     tag: "<Link>",
     badge: "action",
+    needsImport: false,
     description: "A plain hyperlink. Renders as an <a> tag. Use inside Text for inline links; use Button for standalone CTA links.",
     when: "Inline links within a paragraph — 'Contact support', 'View your invoice', 'Unsubscribe'. Button handles full-width click targets better.",
-    snippet: `import { Link } from "@react-email/components";
+    pasteHint: "Already used in the support line (~line 110). Wrap any word in an existing <Text> with <Link> to make it clickable.",
+    snippet: `// Already imported ✓
+// import { Link } from "@react-email/components";
 
-<Text>
-  Questions?{" "}
-  <Link href={supportUrl} style={{ color: "#18181b" }}>
-    Contact our support team
+// Edit the existing support Text (~line 109) to add or change a link:
+<Text style={smallText}>
+  Need help? Reach out at{" "}
+  <Link href={supportUrl} style={{ color: "#2563eb" }}>
+    our support page
   </Link>{" "}
-  and we'll help you out.
+  or call us at{" "}
+  <Link href="tel:+18005551234" style={{ color: "#2563eb" }}>
+    1-800-555-1234
+  </Link>.
 </Text>`,
   },
   {
     name: "Img",
     tag: "<Img>",
     badge: "media",
+    needsImport: true,
     description: "Email-safe image tag. src must be an absolute https:// URL — email clients cannot load relative paths. Always set width and height to prevent layout shift.",
     when: "Logos, product screenshots, hero banners. Add alt text for clients that block images by default (common in corporate environments).",
-    snippet: `import { Img } from "@react-email/components";
+    pasteHint: "Add Img to the import on line 1. Then replace the text logo inside the logoSection Section (~line 52–54).",
+    snippet: `// 1. Add to the import on line 1:
+import {
+  Body, Button, Container, Head, Heading, Hr, Html,
+  Img, Link, Preview, Section, Text, // ← add Img
+} from "@react-email/components";
 
-// Replace the text logo in Section with a real image
-<Img
-  src="https://yourdomain.com/logo.png"
-  alt="Acme"
-  width={120}
-  height={40}
-  style={{ display: "block" }}
-/>`,
+// 2. Replace the logoSection content (~line 52–54):
+// Before:
+// <Section style={logoSection}>
+//   <Text style={logoText}>{productName}</Text>
+// </Section>
+
+// After:
+<Section style={logoSection}>
+  <Img
+    src="https://yourdomain.com/logo.png"
+    alt={productName}
+    width={120}
+    height={40}
+    style={{ display: "block" }}
+  />
+</Section>`,
   },
   {
     name: "Hr",
     tag: "<Hr>",
     badge: "layout",
+    needsImport: false,
     description: "A horizontal divider line. Renders a <hr> element with safe cross-client styles. Visually separates content sections.",
-    when: "Between content sections, between detail rows in a table-style layout, and before the footer. Already used in the payment details box in this template.",
-    snippet: `import { Hr } from "@react-email/components";
+    when: "Between content sections, between detail rows in a table-style layout, and before the footer. Already used in the payment details box.",
+    pasteHint: "Already used inside the detailsBox and before the footer (~line 107). Add another <Hr> between any two sections inside <Container>.",
+    snippet: `// Already imported ✓
+// import { Hr } from "@react-email/components";
 
+// Add between any two sections inside <Container>,
+// e.g. between the button Section and the urgency Text (~line 101):
 <Hr style={{
-  borderColor: "#e4e4e7",
+  borderColor: "#e5e7eb",
   borderWidth: 1,
-  margin: "20px 0",
+  margin: "24px 0",
 }} />`,
   },
   {
     name: "Font",
     tag: "<Font>",
     badge: "style",
+    needsImport: true,
     description: "Loads a web font via @font-face for clients that support it (Apple Mail, iOS Mail, Outlook on Mac). Falls back to fallbackFontFamily silently on Gmail and webmail.",
-    when: "When brand typography matters and you have a hosted woff2 file. Include Font inside Head.",
-    snippet: `import { Font } from "@react-email/components";
+    when: "When brand typography matters and you have a hosted woff2 file. Include Font inside Head — not inside Body.",
+    pasteHint: "Add Font to the import on line 1. Then replace <Head /> on line 48 with <Head>...</Head> and put <Font> inside it.",
+    snippet: `// 1. Add to the import on line 1:
+import {
+  Body, Button, Container, Font, Head, Heading, Hr, Html,
+  Link, Preview, Section, Text, // ← add Font
+} from "@react-email/components";
 
+// 2. Replace <Head /> on line 48 with:
 <Head>
   <Font
     fontFamily="Inter"
@@ -285,20 +371,27 @@ const COMPONENTS: ComponentEntry[] = [
     name: "Markdown",
     tag: "<Markdown>",
     badge: "content",
+    needsImport: true,
     description: "Converts a markdown string to email-safe HTML at render time. Useful when email body content is stored as markdown in a database or CMS.",
     when: "Dynamic or user-authored content that lives outside code. Stick to headings, bold, italic, and links — not all markdown features are supported in email.",
-    snippet: `import { Markdown } from "@react-email/components";
+    pasteHint: "Add Markdown to the import on line 1. Then replace any prose Text block inside <Container> with a <Markdown> block.",
+    snippet: `// 1. Add to the import on line 1:
+import {
+  Body, Button, Container, Head, Heading, Hr, Html,
+  Link, Markdown, Preview, Section, Text, // ← add Markdown
+} from "@react-email/components";
 
-// Content from your CMS or database
-const body = \`
-## Payment failed
+// 2. Replace a Text block inside <Container>, e.g. the paragraph at ~line 61:
+// Before:
+// <Text style={paragraph}>
+//   We tried to charge your card...
+// </Text>
 
-Hi **{customerName}**, we couldn't charge your card.
-
-Please [update your payment method](https://example.com/billing).
-\`;
-
-<Markdown>{body}</Markdown>`,
+// After:
+<Markdown>{\`
+We tried to charge your card ending in **\${cardLast4}** for your
+**\${productName} \${planName}** subscription, but the payment didn't go through.
+\`}</Markdown>`,
   },
 ];
 
@@ -599,6 +692,11 @@ export function StepTemplate({
                       <span style={{ ...localStyles.componentBadge, background: badgeStyle.bg, color: badgeStyle.color }}>
                         {c.badge}
                       </span>
+                      {c.needsImport ? (
+                        <span style={localStyles.importBadgeNew}>+ add to import</span>
+                      ) : (
+                        <span style={localStyles.importBadgeOk}>already imported</span>
+                      )}
                     </div>
                     <div style={localStyles.componentCardActions}>
                       <button
@@ -616,6 +714,9 @@ export function StepTemplate({
                     </div>
                   </div>
                   <p style={localStyles.componentDesc}>{c.description}</p>
+                  <p style={localStyles.pasteHintText}>
+                    <span style={localStyles.pasteHintLabel}>↳ Where:</span> {c.pasteHint}
+                  </p>
                   {isExpanded && (
                     <>
                       <p style={localStyles.componentWhen}>
@@ -1013,6 +1114,36 @@ const localStyles: Record<string, React.CSSProperties> = {
     color: "#52525b",
     lineHeight: 1.65,
     margin: 0,
+  },
+  pasteHintText: {
+    fontSize: 11.5,
+    color: "#71717a",
+    lineHeight: 1.5,
+    margin: "5px 0 0",
+  },
+  pasteHintLabel: {
+    fontWeight: 600,
+    color: "#6366f1",
+  },
+  importBadgeNew: {
+    fontSize: 10,
+    fontWeight: 600,
+    padding: "2px 7px",
+    borderRadius: 99,
+    background: "#fff7ed",
+    color: "#c2410c",
+    border: "1px solid #fed7aa",
+    letterSpacing: "0.1px",
+  },
+  importBadgeOk: {
+    fontSize: 10,
+    fontWeight: 600,
+    padding: "2px 7px",
+    borderRadius: 99,
+    background: "#f0fdf4",
+    color: "#166534",
+    border: "1px solid #bbf7d0",
+    letterSpacing: "0.1px",
   },
   componentWhen: {
     fontSize: 12,
