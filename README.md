@@ -277,8 +277,6 @@ export async function POST(req: Request) {
 ## References
 
 - [Resend: Send emails with Next.js](https://resend.com/docs/send-with-nextjs)
-- [React Email: Getting Started](https://react.email/docs/getting-started/automatic-setup)
-- [React Email: Components](https://react.email/components)
 - [Resend: API reference](https://resend.com/docs/api-reference/emails/send-email)
 
 ## License
