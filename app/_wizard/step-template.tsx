@@ -517,7 +517,7 @@ export function StepTemplate({
       const res = await fetch("/api/render-custom", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: templateCode }),
+        body: JSON.stringify({ code: templateCode, props: emailValues }),
       });
       const json = await res.json();
       if (!res.ok || json.error) {
