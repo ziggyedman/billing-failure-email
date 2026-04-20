@@ -155,7 +155,7 @@ export default function Home() {
                   <div style={styles.watchBadge}>2 min overview</div>
                   <div style={styles.videoWrapper}>
                     <iframe
-                      src="https://www.loom.com/embed/af24b2bb3e904053bb6d2c5c56a35740"
+                      src="https://www.loom.com/embed/a23c0070804c4dc2983f0b3836432562"
                       allowFullScreen
                       style={styles.videoIframe}
                     />
