@@ -22,6 +22,23 @@ const FIELDS: { key: keyof EmailValues; label: string; wide?: boolean }[] = [
   { key: "companyName",   label: "Company name" },
 ];
 
+function buildPreviewUrl(v: EmailValues): string {
+  const p = new URLSearchParams({
+    customerName:  v.customerName,
+    amount:        v.amount,
+    cardLast4:     v.cardLast4,
+    failureReason: v.failureReason,
+    nextRetryDate: v.nextRetryDate,
+    companyName:   v.companyName,
+    productName:   "Acme",
+    planName:      "Pro",
+    currency:      "USD",
+    updatePaymentUrl: "https://example.com/billing",
+    supportUrl:       "https://example.com/support",
+  });
+  return `/api/preview?${p.toString()}`;
+}
+
 function buildCodeSnippet(v: EmailValues, from: string): string {
   return `import { Resend } from "resend";
 import BillingFailureEmail from "@/emails/billing-failure";
@@ -89,6 +106,7 @@ export function StepSend({
   const [mainTab, setMainTab] = useState<MainTab>("send");
   const [sourceLines, setSourceLines] = useState<string[]>([]);
   const [values, setValues] = useState<EmailValues>(emailValues);
+  const [defaultPreviewUrl, setDefaultPreviewUrl] = useState(() => buildPreviewUrl(emailValues));
   const [rerendering, setRerendering] = useState(false);
 
   function setField(key: keyof EmailValues, val: string) {
@@ -97,6 +115,7 @@ export function StepSend({
 
   async function applyValues() {
     onEmailValuesChange(values);
+    setDefaultPreviewUrl(buildPreviewUrl(values));
     if (customTemplateHtml && customTemplateCode) {
       setRerendering(true);
       try {
@@ -142,9 +161,12 @@ export function StepSend({
           apiKey,
           from: fromEmail,
           to: toEmail,
-          customerName: values.customerName,
-          amount: values.amount,
-          cardLast4: values.cardLast4,
+          customerName:  values.customerName,
+          amount:        values.amount,
+          cardLast4:     values.cardLast4,
+          failureReason: values.failureReason,
+          nextRetryDate: values.nextRetryDate,
+          companyName:   values.companyName,
           ...(customTemplateHtml ? { customHtml: customTemplateHtml } : {}),
         }),
       });
@@ -313,7 +335,7 @@ export function StepSend({
               />
             ) : (
               <iframe
-                src="/api/preview"
+                src={defaultPreviewUrl}
                 style={localStyles.previewFrame}
                 title="Email preview"
               />

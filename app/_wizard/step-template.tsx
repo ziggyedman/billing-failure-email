@@ -6,6 +6,7 @@ import { CodeBlock } from "./code-block";
 
 interface StepTemplateProps {
   emailValues: EmailValues;
+  customTemplateHtml: string;
   onComplete: () => void;
   alreadyCompleted: boolean;
   customTemplateCode: string;
@@ -482,6 +483,7 @@ export function ComponentLibraryPanel() {
 
 export function StepTemplate({
   emailValues,
+  customTemplateHtml,
   onComplete,
   alreadyCompleted,
   customTemplateCode,
@@ -495,7 +497,7 @@ export function StepTemplate({
   const [templateCode, setTemplateCode] = useState(customTemplateCode);
   const [templateLoading, setTemplateLoading] = useState(false);
   const [templateApplying, setTemplateApplying] = useState(false);
-  const [customHtml, setCustomHtml] = useState<string | null>(null);
+  const [customHtml, setCustomHtml] = useState<string | null>(customTemplateHtml || null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const templateFetched = useRef(false);
   const originalCode = useRef("");

@@ -11,6 +11,9 @@ interface SendBody {
   amount?: string;
   currency?: string;
   cardLast4?: string;
+  failureReason?: string;
+  nextRetryDate?: string;
+  companyName?: string;
   customHtml?: string;
 }
 
@@ -56,17 +59,17 @@ export async function POST(request: Request) {
             to: [to],
             subject: "Your payment didn't go through",
             react: BillingFailureEmail({
-              customerName: body.customerName || "there",
-              productName: "Acme",
-              planName: "Pro",
-              amount: body.amount || "29.00",
-              currency: body.currency || "USD",
-              cardLast4: body.cardLast4 || "4242",
-              failureReason: "Your card was declined (insufficient_funds).",
-              nextRetryDate: "in 3 days",
+              customerName:  body.customerName  || "there",
+              productName:   "Acme",
+              planName:      "Pro",
+              amount:        body.amount        || "29.00",
+              currency:      body.currency      || "USD",
+              cardLast4:     body.cardLast4     || "4242",
+              failureReason: body.failureReason || "Your card was declined (insufficient_funds).",
+              nextRetryDate: body.nextRetryDate || "in 3 days",
+              companyName:   body.companyName   || "Acme, Inc.",
               updatePaymentUrl: "https://example.com/billing",
-              supportUrl: "https://example.com/support",
-              companyName: "Acme, Inc.",
+              supportUrl:       "https://example.com/support",
             }),
           }
     );

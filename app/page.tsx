@@ -269,6 +269,7 @@ export default function Home() {
                   {current === 2 && (
                     <StepTemplate
                       emailValues={state.emailValues}
+                      customTemplateHtml={state.customTemplateHtml}
                       onComplete={() => markComplete(2)}
                       alreadyCompleted={state.completed[2]}
                       customTemplateCode={state.customTemplateCode}
