@@ -4,6 +4,15 @@ An interactive guide to sending billing-failure emails with React Email and Rese
 
 The wizard is the tutorial. Instead of a static guide, every step shows real code from this repo and lets you run it. The email template is written with React Email, the sending code runs in a Next.js App Router route, and this README is the written companion that goes deeper on each step.
 
+## How it works
+
+The app uses a React Email component to define the message content. Resend renders that component into email-ready HTML, and the Resend SDK sends it from a server-side route so the email is processed and delivered to the recipient's inbox.
+
+1. The email is first built as a React component, which keeps the content structured and reusable.
+2. When the app needs to send a message, the backend API route imports that component and passes the required customer data into it as props.
+3. The Resend SDK sends the email request, using the rendered React content as the body of the message.
+4. Once Resend accepts the request, it handles delivery through its email infrastructure.
+
 ## The four steps
 
 | # | Step | What happens |
