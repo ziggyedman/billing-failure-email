@@ -725,7 +725,7 @@ export default BillingFailureEmail;`} />
             <p style={localStyles.sectionBody}>
               Design your props around the data your system already has. Each prop
               maps to one dynamic value in the email. Keep everything as strings and
-              do any formatting — currency symbols, date formatting — at the call
+              do any formatting like currency symbols and date formatting at the call
               site before passing props in. That keeps the template simple and reusable.
             </p>
             <CodeBlock compact code={`interface BillingFailureEmailProps {
@@ -747,14 +747,14 @@ export default BillingFailureEmail;`} />
           <div style={localStyles.sectionCard}>
             <div style={localStyles.sectionTitle}>
               Root structure
-              <span style={localStyles.lineRef}>lines 46–48</span>
+              <span style={localStyles.lineRef}>lines 46-48</span>
             </div>
             <p style={localStyles.sectionBody}>
               Every email template starts with the same three wrappers.{" "}
               <code style={s.inlineCode}>&lt;Html&gt;</code> sets the document
               language and writing direction.{" "}
               <code style={s.inlineCode}>&lt;Head&gt;</code> is where you put
-              responsive styles and custom fonts — keep it minimal, most styling
+              responsive styles and custom fonts. Keep it minimal, most styling
               in email has to be inline.{" "}
               <code style={s.inlineCode}>&lt;Preview&gt;</code> controls the
               snippet text users see in their inbox before they open the email.
@@ -773,14 +773,14 @@ export default BillingFailureEmail;`} />
           <div style={localStyles.sectionCard}>
             <div style={localStyles.sectionTitle}>
               Layout wrappers
-              <span style={localStyles.lineRef}>lines 49–50</span>
+              <span style={localStyles.lineRef}>lines 49-50</span>
             </div>
             <p style={localStyles.sectionBody}>
               <code style={s.inlineCode}>&lt;Body&gt;</code> sets the background
               color of the full email canvas and the base font stack.{" "}
               <code style={s.inlineCode}>&lt;Container&gt;</code> creates the centered
               card that holds your content. Set <code style={s.inlineCode}>maxWidth</code>{" "}
-              to 560–600px. Wider than that and your email will look broken in preview
+              to 560-600px. Wider than that and your email will look broken in preview
               panes and on mobile. Everything else goes inside Container.
             </p>
             <CodeBlock compact code={`<Body style={main}>
@@ -797,7 +797,7 @@ const container = { maxWidth: "560px", margin: "0 auto", padding: "32px 40px" };
           <div style={localStyles.sectionCard}>
             <div style={localStyles.sectionTitle}>
               Branding
-              <span style={localStyles.lineRef}>lines 51–53</span>
+              <span style={localStyles.lineRef}>lines 51-53</span>
             </div>
             <p style={localStyles.sectionBody}>
               Put your logo or product name at the very top of the email, before
@@ -819,13 +819,13 @@ const container = { maxWidth: "560px", margin: "0 auto", padding: "32px 40px" };
           <div style={localStyles.sectionCard}>
             <div style={localStyles.sectionTitle}>
               Status banner
-              <span style={localStyles.lineRef}>lines 55–57</span>
+              <span style={localStyles.lineRef}>lines 55-57</span>
             </div>
             <p style={localStyles.sectionBody}>
               A colored block that communicates the nature of the email before the
               user reads a word of body copy. For failure emails, use red or orange.
-              For confirmations, use green. Style it with inline styles — email
-              clients like Gmail strip CSS classes, so inline is the only reliable
+              For confirmations, use green. Style it with inline styles because
+              email clients like Gmail strip CSS classes, so inline is the only reliable
               way to apply color in email.
             </p>
             <CodeBlock compact code={`<Section style={alertBanner}>
@@ -844,7 +844,7 @@ const alertBanner = {
           <div style={localStyles.sectionCard}>
             <div style={localStyles.sectionTitle}>
               Greeting and body copy
-              <span style={localStyles.lineRef}>lines 59–65</span>
+              <span style={localStyles.lineRef}>lines 59-65</span>
             </div>
             <p style={localStyles.sectionBody}>
               Use the customer's name in the greeting. It makes a difference.
@@ -865,7 +865,7 @@ const alertBanner = {
           <div style={localStyles.sectionCard}>
             <div style={localStyles.sectionTitle}>
               Summary details
-              <span style={localStyles.lineRef}>lines 67–89</span>
+              <span style={localStyles.lineRef}>lines 67-89</span>
             </div>
             <p style={localStyles.sectionBody}>
               A structured block that surfaces the key facts: amount, card, reason,
@@ -893,11 +893,11 @@ const alertBanner = {
           <div style={localStyles.sectionCard}>
             <div style={localStyles.sectionTitle}>
               Call to action
-              <span style={localStyles.lineRef}>lines 96–100</span>
+              <span style={localStyles.lineRef}>lines 96-100</span>
             </div>
             <p style={localStyles.sectionBody}>
               One button, one action. Link it directly to where the user fixes the
-              problem — not your homepage or dashboard. The fewer clicks it takes,
+              problem, not your homepage or dashboard. The fewer clicks it takes,
               the more likely they complete it. For billing failures, link to the
               exact page where they can update their card.
             </p>
@@ -912,7 +912,7 @@ const alertBanner = {
           <div style={localStyles.sectionCard}>
             <div style={localStyles.sectionTitle}>
               Support link and footer
-              <span style={localStyles.lineRef}>lines 107–120</span>
+              <span style={localStyles.lineRef}>lines 107-120</span>
             </div>
             <p style={localStyles.sectionBody}>
               Always give users a way to get help. A short support line after the
@@ -938,7 +938,7 @@ const alertBanner = {
           <div style={{ ...localStyles.sectionCard, marginBottom: 0 }}>
             <div style={localStyles.sectionTitle}>
               Styling
-              <span style={localStyles.lineRef}>lines 129–255</span>
+              <span style={localStyles.lineRef}>lines 129-255</span>
             </div>
             <p style={localStyles.sectionBody}>
               Email clients strip CSS classes, so all styling must be inline. Declare
