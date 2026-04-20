@@ -586,7 +586,7 @@ export function StepTemplate({
         <>
           <p style={s.prose}>
             Open <strong>Template</strong> to edit the React Email component. Copy a snippet from the
-            panel on the right and paste it in. Click <strong>Preview template</strong> to render and
+            panel on the right and paste it. Click <strong>Preview template</strong> to render and
             preview the result. Customer details and the send call live in Step 4.
           </p>
 
