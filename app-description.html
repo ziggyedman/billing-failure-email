@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>App Description — Teleprompter</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f0f11;
+      color: #f0f0f0;
+      font-family: 'Georgia', serif;
+      font-size: 28px;
+      line-height: 1.85;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 60px 48px 120px;
+    }
+
+    .label {
+      display: inline-block;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #625DF5;
+      background: rgba(98,93,245,0.12);
+      border: 1px solid rgba(98,93,245,0.3);
+      border-radius: 4px;
+      padding: 3px 10px;
+      margin-bottom: 18px;
+    }
+
+    .time {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: #52525b;
+      margin-left: 10px;
+      vertical-align: middle;
+    }
+
+    section {
+      margin-bottom: 64px;
+      padding-bottom: 64px;
+      border-bottom: 1px solid #27272a;
+    }
+
+    section:last-child {
+      border-bottom: none;
+    }
+
+    p {
+      margin-bottom: 18px;
+    }
+
+    strong {
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    em {
+      color: #a78bfa;
+      font-style: normal;
+    }
+
+    .pause {
+      display: inline-block;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #3f3f46;
+      background: #1c1c1f;
+      border-radius: 4px;
+      padding: 2px 8px;
+      margin: 0 4px;
+    }
+
+    .code {
+      font-family: 'Courier New', monospace;
+      font-size: 22px;
+      color: #e4e4e7;
+      background: #18181b;
+      border-radius: 5px;
+      padding: 2px 10px;
+    }
+
+    h2 {
+      font-size: 16px;
+      font-weight: 700;
+      font-family: 'Courier New', monospace;
+      color: #71717a;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+
+    .tldr {
+      background: #18181b;
+      border: 1px solid #27272a;
+      border-left: 3px solid #625DF5;
+      border-radius: 8px;
+      padding: 20px 24px;
+      margin-bottom: 32px;
+      font-size: 20px;
+      color: #a1a1aa;
+      line-height: 1.7;
+    }
+
+    .tldr strong {
+      color: #f0f0f0;
+    }
+
+    footer {
+      margin-top: 80px;
+      text-align: center;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      color: #3f3f46;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ─────────────────────────────────────── INTRO ─── -->
+  <section>
+    <div class="label">Intro <span class="time">~20s</span></div>
+
+    <div class="tldr">
+      <strong>One-line pitch:</strong> A self-contained interactive tutorial that walks a developer through sending a real billing-failure email — live template editing, live preview, real send.
+    </div>
+
+    <p>
+      The prompt was to build something that teaches developers
+      how to send a <strong>billing-failure email</strong>
+      using <em>React Email</em> and <em>Resend</em>.
+    </p>
+
+    <p>
+      Instead of writing a static doc,
+      I built an <strong>interactive wizard</strong> —
+      a four-step tutorial app where you actually run every piece of the implementation.
+    </p>
+  </section>
+
+  <!-- ─────────────────────────────────────── THE FOUR STEPS ─── -->
+  <section>
+    <div class="label">The four steps <span class="time">~30s</span></div>
+
+    <p>
+      The steps mirror the real production path:
+    </p>
+
+    <p>
+      <span class="pause">1</span> Get a Resend API key.
+      <span class="pause">2</span> Verify a sending domain.
+      <span class="pause">3</span> Edit the email template and preview it live.
+      <span class="pause">4</span> Set the customer details and fire a real send.
+    </p>
+
+    <p>
+      Each step is self-contained.
+      Jump to any step from the sidebar at any time.
+      Progress and inputs persist in <span class="code">localStorage</span> across refreshes.
+    </p>
+  </section>
+
+  <!-- ─────────────────────────────────────── STEP 3 HIGHLIGHT ─── -->
+  <section>
+    <div class="label">Step 3 — template editing <span class="time">~40s</span></div>
+
+    <p>
+      Step 3 is where most of the interesting work happens.
+    </p>
+
+    <p>
+      The left column has two tabs. <strong>Try it</strong> is a full template editor —
+      the actual <span class="code">emails/billing-failure.tsx</span> file,
+      editable right in the browser.
+      The right column is a <strong>React Email component library</strong> —
+      all 14 components, each with a description, a when-to-use note,
+      and a copyable snippet.
+    </p>
+
+    <p>
+      You copy a snippet, paste it into the editor, click <strong>Render preview</strong>,
+      and see the rendered email immediately.
+      Hit <strong>Reset to original</strong> to discard all changes.
+      Whatever you render here is what gets <em>actually sent</em> in Step 4.
+    </p>
+
+    <p>
+      The <strong>How it's built</strong> tab walks through the template file section by section —
+      file structure, props interface, layout, branding, status banner, CTA, footer, and why
+      every style is an inline object.
+      Written as a general reference for engineers building their own email templates,
+      not just this one.
+    </p>
+  </section>
+
+  <!-- ─────────────────────────────────────── STEP 4 HIGHLIGHT ─── -->
+  <section>
+    <div class="label">Step 4 — send <span class="time">~30s</span></div>
+
+    <p>
+      Step 4 separates customer data from template structure — intentionally.
+    </p>
+
+    <p>
+      You edit the <strong>customer details</strong> — name, amount, card last 4, failure reason —
+      and see the <span class="code">resend.emails.send()</span> call update live.
+    </p>
+
+    <p>
+      Right below it, a <strong>live email preview</strong> shows exactly what will be sent.
+      If you rendered a custom template in Step 3, it loads that version directly,
+      with a <em>Custom</em> badge in the header.
+      Otherwise it shows the default template.
+    </p>
+
+    <p>
+      Then you enter a recipient and click send.
+      The response comes back with a Resend message ID.
+    </p>
+  </section>
+
+  <!-- ─────────────────────────────────────── WRAP UP ─── -->
+  <section>
+    <div class="label">Wrap up <span class="time">~15s</span></div>
+
+    <p>
+      The repo is the tutorial.
+      Fork it, drop the wizard UI, keep <span class="code">emails/billing-failure.tsx</span>
+      and the send route, wire it to a Stripe webhook —
+      it's production-ready as-is.
+    </p>
+
+    <p>
+      Happy to go deeper on any part. <span class="pause">pause</span>
+    </p>
+  </section>
+
+  <footer>billing-failure-email · Next.js · React Email · Resend · ~2 min</footer>
+
+</body>
+</html>

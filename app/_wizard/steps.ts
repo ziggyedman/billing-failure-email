@@ -25,7 +25,7 @@ export const STEPS: StepDef[] = [
   {
     id: "template",
     title: "Email template & live preview",
-    subtitle: "How the template is built — edit values and see changes instantly",
+    subtitle: "How the template is built. Edit values and see changes instantly",
     duration: "~4 min",
   },
   {

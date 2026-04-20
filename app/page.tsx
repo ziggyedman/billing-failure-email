@@ -10,13 +10,22 @@ import { Sidebar } from "./_wizard/sidebar";
 
 const STORAGE_KEY = "billing-tutorial-state-v1";
 
+interface EmailValues {
+  customerName: string;
+  amount: string;
+  cardLast4: string;
+  failureReason: string;
+  nextRetryDate: string;
+  companyName: string;
+}
+
 interface WizardState {
   currentStep: number;
   completed: boolean[];
   apiKey: string;
   fromEmail: string;
   toEmail: string;
-  customerName: string;
+  emailValues: EmailValues;
   notes: string[];
   customTemplateCode: string;
   customTemplateHtml: string;
@@ -28,7 +37,14 @@ const initialState: WizardState = {
   apiKey: "",
   fromEmail: "",
   toEmail: "",
-  customerName: "Alex",
+  emailValues: {
+    customerName: "Alex",
+    amount: "29.00",
+    cardLast4: "4242",
+    failureReason: "Your card was declined (insufficient_funds).",
+    nextRetryDate: "in 3 days",
+    companyName: "Acme, Inc.",
+  },
   notes: STEPS.map(() => ""),
   customTemplateCode: "",
   customTemplateHtml: "",
@@ -179,28 +195,28 @@ export default function Home() {
                       <span style={styles.stepNum}>1</span>
                       <div>
                         <strong style={styles.stepItemTitle}>Create a Resend account</strong>
-                        <span style={styles.stepItemDesc}> — sign up and generate an API key</span>
+                        <span style={styles.stepItemDesc}>, sign up and generate an API key</span>
                       </div>
                     </li>
                     <li style={styles.stepItem}>
                       <span style={styles.stepNum}>2</span>
                       <div>
                         <strong style={styles.stepItemTitle}>Verify your sending domain</strong>
-                        <span style={styles.stepItemDesc}> — add DNS records so Resend can send from your domain</span>
+                        <span style={styles.stepItemDesc}>, add DNS records so Resend can send from your domain</span>
                       </div>
                     </li>
                     <li style={styles.stepItem}>
                       <span style={styles.stepNum}>3</span>
                       <div>
                         <strong style={styles.stepItemTitle}>Build &amp; preview the email template</strong>
-                        <span style={styles.stepItemDesc}> — edit the React Email component and preview live</span>
+                        <span style={styles.stepItemDesc}>, edit the React Email component and preview live</span>
                       </div>
                     </li>
                     <li style={styles.stepItem}>
                       <span style={styles.stepNum}>4</span>
                       <div>
                         <strong style={styles.stepItemTitle}>Send the email</strong>
-                        <span style={styles.stepItemDesc}> — fire a real send through a Next.js API route</span>
+                        <span style={styles.stepItemDesc}>, fire a real send through a Next.js API route</span>
                       </div>
                     </li>
                   </ol>
@@ -252,7 +268,7 @@ export default function Home() {
                   )}
                   {current === 2 && (
                     <StepTemplate
-                      customerName={state.customerName}
+                      emailValues={state.emailValues}
                       onComplete={() => markComplete(2)}
                       alreadyCompleted={state.completed[2]}
                       customTemplateCode={state.customTemplateCode}
@@ -265,12 +281,12 @@ export default function Home() {
                       apiKey={state.apiKey}
                       fromEmail={state.fromEmail}
                       toEmail={state.toEmail}
-                      customerName={state.customerName}
+                      emailValues={state.emailValues}
                       customTemplateHtml={state.customTemplateHtml}
                       customTemplateCode={state.customTemplateCode}
                       completed={state.completed}
                       onToEmailChange={(v) => update("toEmail", v)}
-                      onCustomerNameChange={(v) => update("customerName", v)}
+                      onEmailValuesChange={(v) => update("emailValues", v)}
                       onCustomHtmlChange={(html) => update("customTemplateHtml", html)}
                       onComplete={() => markComplete(3)}
                       alreadyCompleted={state.completed[3]}

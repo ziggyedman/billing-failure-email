@@ -47,7 +47,7 @@ export function StepAccount({
 
       <NumberedSection num={3} title="Copy the key" last>
         The key starts with <code style={s.inlineCode}>re_</code>. Resend only
-        shows it once — don't navigate away before pasting it below.
+        shows it once, so don't navigate away before pasting it below.
       </NumberedSection>
 
       <div style={s.callout}>
@@ -72,7 +72,7 @@ export function StepAccount({
         />
         <p style={s.hint}>
           Stored only in your browser. The app sends it to its own API route
-          when you hit Send in Step 4 — it never leaves the session otherwise.
+          when you hit Send in Step 4. It never leaves the session.
         </p>
       </div>
 

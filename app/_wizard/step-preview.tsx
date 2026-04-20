@@ -110,7 +110,7 @@ export function StepPreview({
 
       <div style={s.actionsRow}>
         <button style={s.primaryBtn} onClick={onComplete}>
-          {alreadyCompleted ? "Continue to send" : "Looks good — continue"}
+          {alreadyCompleted ? "Continue to send" : "Looks good, continue"}
         </button>
       </div>
     </div>

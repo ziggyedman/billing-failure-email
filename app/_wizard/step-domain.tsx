@@ -69,8 +69,8 @@ export function StepDomain({
         />
         <p style={s.hint}>
           Must be on a domain you've verified in Resend. You can use any
-          local-part (<code>billing@</code>, <code>noreply@</code>, etc.) —
-          Resend only checks that the domain checks out.
+          local-part (<code>billing@</code>, <code>noreply@</code>, etc.).
+          Resend only checks that the domain is verified.
         </p>
       </div>
 

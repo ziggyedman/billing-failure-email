@@ -13,15 +13,6 @@ interface EmailValues {
   companyName: string;
 }
 
-const DEFAULTS: EmailValues = {
-  customerName:  "Alex",
-  amount:        "29.00",
-  cardLast4:     "4242",
-  failureReason: "Your card was declined (insufficient_funds).",
-  nextRetryDate: "in 3 days",
-  companyName:   "Acme, Inc.",
-};
-
 const FIELDS: { key: keyof EmailValues; label: string; wide?: boolean }[] = [
   { key: "customerName",  label: "Customer name" },
   { key: "amount",        label: "Amount" },
@@ -61,12 +52,12 @@ interface StepSendProps {
   apiKey: string;
   fromEmail: string;
   toEmail: string;
-  customerName: string;
+  emailValues: EmailValues;
   customTemplateHtml: string;
   customTemplateCode: string;
   completed: boolean[];
   onToEmailChange: (v: string) => void;
-  onCustomerNameChange: (v: string) => void;
+  onEmailValuesChange: (v: EmailValues) => void;
   onCustomHtmlChange: (html: string) => void;
   onComplete: () => void;
   alreadyCompleted: boolean;
@@ -84,12 +75,12 @@ export function StepSend({
   apiKey,
   fromEmail,
   toEmail,
-  customerName,
+  emailValues,
   customTemplateHtml,
   customTemplateCode,
   completed,
   onToEmailChange,
-  onCustomerNameChange,
+  onEmailValuesChange,
   onCustomHtmlChange,
   onComplete,
   alreadyCompleted,
@@ -97,7 +88,7 @@ export function StepSend({
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [mainTab, setMainTab] = useState<MainTab>("send");
   const [sourceLines, setSourceLines] = useState<string[]>([]);
-  const [values, setValues] = useState<EmailValues>({ ...DEFAULTS, customerName });
+  const [values, setValues] = useState<EmailValues>(emailValues);
   const [rerendering, setRerendering] = useState(false);
 
   function setField(key: keyof EmailValues, val: string) {
@@ -105,7 +96,7 @@ export function StepSend({
   }
 
   async function applyValues() {
-    onCustomerNameChange(values.customerName);
+    onEmailValuesChange(values);
     if (customTemplateHtml && customTemplateCode) {
       setRerendering(true);
       try {
@@ -197,9 +188,15 @@ export function StepSend({
         <>
           {/* ── Customer details + code snippet ── */}
           <p style={s.prose}>
-            Edit the customer details and click <strong>Apply</strong>.
-            If a custom template is active from Step 3, Apply re-renders it with the new values.
-            Otherwise the values are injected directly into the default template at send time.
+            These fields represent the data your app already has about the customer at the moment
+            a payment fails: their name, the charge amount, which card was on file, why it was
+            declined, and when you will retry. In a real integration, these values come from your
+            payment provider's webhook payload (for example, a Stripe{" "}
+            <code style={s.inlineCode}>invoice.payment_failed</code> event) or from your own
+            database record for that subscription. Edit the fields below to see how the template
+            responds to different scenarios, then click <strong>Apply</strong>. The code snippet
+            updates, the preview re-renders, and these are the exact values that will be passed as
+            props to the email template when you send.
           </p>
 
           <div style={localStyles.fieldGrid}>
@@ -243,6 +240,15 @@ export function StepSend({
             <CodeBlock code={buildCodeSnippet(values, fromEmail)} />
           </div>
 
+          <p style={s.hint}>
+            <code style={s.inlineCode}>resend.emails.send()</code> is the single method from the Resend SDK that delivers an email.
+            You pass it a <code style={s.inlineCode}>from</code> address (must be on your verified domain),
+            a <code style={s.inlineCode}>to</code> array of recipients, a <code style={s.inlineCode}>subject</code> line,
+            and either a <code style={s.inlineCode}>react:</code> prop with your template component or an <code style={s.inlineCode}>html:</code> prop with a raw HTML string.
+            When you use <code style={s.inlineCode}>react:</code>, Resend converts the component to email-safe HTML automatically.
+            The method returns a message ID you can use to track delivery in the Resend dashboard.
+          </p>
+
           <div style={localStyles.sendDivider} />
 
           <p style={s.prose}>
@@ -284,16 +290,39 @@ export function StepSend({
             </div>
           </div>
 
-          {customTemplateHtml && (
-            <div style={{ ...s.callout, background: "rgba(98,93,245,0.06)", borderColor: "rgba(98,93,245,0.3)" }}>
-              <span style={{ color: "#625DF5", fontWeight: 600 }}>Custom template active</span>{" "}
-              — the edited template from Step 3 will be sent.
+          <div style={localStyles.previewPanel}>
+            <div style={localStyles.previewBar}>
+              <div style={localStyles.codeViewerDots}>
+                <span style={localStyles.dot} />
+                <span style={localStyles.dot} />
+                <span style={localStyles.dot} />
+                <span style={localStyles.codeViewerTitle}>
+                  {customTemplateHtml ? "Your payment didn't go through (custom template)" : "Your payment didn't go through"}
+                </span>
+              </div>
+              {customTemplateHtml && (
+                <span style={localStyles.customBadge}>Custom</span>
+              )}
             </div>
-          )}
+            {customTemplateHtml ? (
+              <iframe
+                srcDoc={customTemplateHtml}
+                style={localStyles.previewFrame}
+                title="Email preview"
+                sandbox="allow-same-origin"
+              />
+            ) : (
+              <iframe
+                src="/api/preview"
+                style={localStyles.previewFrame}
+                title="Email preview"
+              />
+            )}
+          </div>
 
           {!allPriorComplete && (
             <div style={s.callout}>
-              <span style={s.calloutStrong}>Complete steps 1–3 first.</span>{" "}
+              <span style={s.calloutStrong}>Complete steps 1, 2, and 3 first.</span>{" "}
               Mark each step complete using its button, then come back here to send.
             </div>
           )}
@@ -365,7 +394,7 @@ export function StepSend({
             The billing failure React component from Step 3 is passed directly
             to <code style={s.inlineCode}>resend.emails.send()</code> via the{" "}
             <code style={s.inlineCode}>react:</code> prop. Resend calls React
-            Email's <code style={s.inlineCode}>render()</code> internally —
+            Email's <code style={s.inlineCode}>render()</code> internally,
             converting the component to HTML and generating a plain-text
             fallback automatically. The customer details (name, amount, card,
             reason, retry date) are injected at send time.
@@ -494,6 +523,37 @@ const localStyles: Record<string, React.CSSProperties> = {
   sendDivider: {
     borderTop: "1px solid #e4e4e7",
     marginBottom: 24,
+  },
+  previewPanel: {
+    border: "1px solid #e4e4e7",
+    borderRadius: 8,
+    overflow: "hidden",
+    marginBottom: 20,
+  },
+  previewBar: {
+    background: "#f4f4f5",
+    borderBottom: "1px solid #e4e4e7",
+    padding: "0 12px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    minHeight: 40,
+  },
+  previewFrame: {
+    width: "100%",
+    height: 380,
+    border: "none",
+    display: "block",
+    background: "#f6f7f9",
+  },
+  customBadge: {
+    fontSize: 11,
+    fontWeight: 600,
+    color: "#625DF5",
+    background: "rgba(98,93,245,0.08)",
+    border: "1px solid rgba(98,93,245,0.25)",
+    borderRadius: 4,
+    padding: "2px 8px",
   },
   mainTabBar: {
     display: "flex",
