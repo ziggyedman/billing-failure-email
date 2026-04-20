@@ -152,7 +152,7 @@ export default function Home() {
               </header>
               <div style={styles.contentBody}>
                 <div style={styles.videoSection}>
-                  <div style={styles.watchBadge}>2 min overview</div>
+                  <div style={styles.watchBadge}>Overview</div>
                   <div style={styles.videoWrapper}>
                     <iframe
                       src="https://www.loom.com/embed/a23c0070804c4dc2983f0b3836432562"
