@@ -6,6 +6,8 @@ export interface StepDef {
   duration: string;
   /** Whether the "Mark complete" button is gated by user input */
   requiresInput?: boolean;
+  /** Optional reference doc link shown in the step header */
+  docLink?: { label: string; url: string };
 }
 
 export const STEPS: StepDef[] = [
@@ -27,12 +29,14 @@ export const STEPS: StepDef[] = [
     title: "Email template & live preview",
     subtitle: "How the template is built. Edit values and see changes instantly",
     duration: "~4 min",
+    docLink: { label: "Resend: Send emails with Next.js", url: "https://resend.com/docs/send-with-nextjs" },
   },
   {
     id: "send",
     title: "Send the email",
     subtitle: "Inspect the API route that fires the email, then send a real one",
     duration: "~1 min",
-    requiresInput: true, // requires actually sending
+    requiresInput: true,
+    docLink: { label: "Resend: API reference", url: "https://resend.com/docs/api-reference/emails/send-email" },
   },
 ];

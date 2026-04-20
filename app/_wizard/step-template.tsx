@@ -935,14 +935,6 @@ const alertBanner = {
           </div>
 
           {/* Styles */}
-          <p style={s.hint}>
-            For a full walkthrough of setting up React Email with Next.js and Resend, see the{" "}
-            <a href="https://resend.com/docs/send-with-nextjs" target="_blank" style={s.link}>
-              Resend: Send emails with Next.js
-            </a>{" "}
-            guide.
-          </p>
-
           <div style={{ ...localStyles.sectionCard, marginBottom: 0 }}>
             <div style={localStyles.sectionTitle}>
               Styling

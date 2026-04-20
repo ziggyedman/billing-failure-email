@@ -445,12 +445,6 @@ export function StepSend({
             example, pausing the subscription after a confirmed bounce.
           </NumberedSection>
 
-          <p style={s.hint}>
-            Full reference for all send options and response fields:{" "}
-            <a href="https://resend.com/docs/api-reference/emails/send-email" target="_blank" style={s.link}>
-              Resend API reference
-            </a>.
-          </p>
         </>
       )}
     </div>

@@ -245,6 +245,16 @@ export default function Home() {
                 <h1 style={styles.contentTitle}>{STEPS[current].title}</h1>
                 <p style={styles.contentSubtitle}>
                   {STEPS[current].subtitle}
+                  {STEPS[current].docLink && (
+                    <a
+                      href={STEPS[current].docLink!.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      style={styles.docLink}
+                    >
+                      {STEPS[current].docLink!.label} ↗
+                    </a>
+                  )}
                 </p>
               </header>
 
@@ -473,6 +483,14 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#18181b",
     textDecoration: "underline",
     textUnderlineOffset: "3px",
+  },
+  docLink: {
+    display: "block",
+    marginTop: 6,
+    fontSize: 12,
+    color: "#6366f1",
+    textDecoration: "none",
+    fontWeight: 500,
   },
   startRow: {
     display: "flex",
